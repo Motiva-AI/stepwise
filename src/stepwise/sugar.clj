@@ -4,14 +4,6 @@
             [clojure.string :as strs])
   (:import (java.util Date)))
 
-{:start-at :hello
- :states   {:hello  {:type     :task
-                     :resource :foolio
-                     :next     :foolio}
-            :foolio {:type     :task
-                     :resource :bam
-                     :end      true}}}
-
 (defn model-keyword [n]
   (keyword (name 'stepwise.model) (name n)))
 
@@ -102,11 +94,11 @@
                                           map-or-children)
     model-comparison-ops (sugar-comparison op (first map-or-children))))
 
-(defn sugar-state-type [state-type]
-  (name state-type))
+(defn desugar-state-name [state-name]
+  (name state-name))
 
-(defn desugar-state-type [state-type]
-  (keyword state-type))
+(defn sugar-state-name [state-name]
+  (keyword state-name))
 
 (defn sugar-transition [transition-having]
   (condp = (::mdl/transition transition-having)
@@ -115,7 +107,7 @@
                   (assoc :end true))
     (-> transition-having
         (dissoc ::mdl/transition)
-        (assoc :next (desugar-state-type (::mdl/transition transition-having))))))
+        (assoc :next (sugar-state-name (::mdl/transition transition-having))))))
 
 (defn desugar-transition [transition-having]
   (condp #(contains? %2 %1) transition-having
@@ -124,7 +116,7 @@
              (assoc ::mdl/transition ::mdl/end))
     :next (-> transition-having
               (dissoc :next)
-              (assoc ::mdl/transition (sugar-state-type (:next transition-having))))))
+              (assoc ::mdl/transition (desugar-state-name (:next transition-having))))))
 
 (def wait-interval-keys
   #{:seconds
@@ -178,7 +170,14 @@
 (defmethod desugar-state* :choice [choice-state]
   (-> choice-state
       (dissoc :choices)
-      (assoc ::mdl/choices (mapv desugar-choice (:choices choice-state)))))
+      (assoc ::mdl/choices (mapv desugar-choice (:choices choice-state)))
+      ((fn [choice-state]
+         (if-let [state-name (:default-state-name choice-state)]
+           (-> choice-state
+               (dissoc :default-state-name)
+               (assoc ::mdl/default-state-name
+                      (desugar-state-name state-name)))
+           choice-state)))))
 
 (defmethod sugar-state* ::mdl/choice [choice-state]
   (-> choice-state
@@ -190,4 +189,14 @@
 
 (defmethod sugar-state* ::mdl/pass [pass]
   (sugar-transition pass))
+
+(defn desugar-state-machine [state-machine]
+  (-> state-machine
+      (dissoc :start-at)
+      (assoc ::mdl/start-at (desugar-state-name (:start-at state-machine)))
+      (dissoc :states)
+      (assoc ::mdl/states (into {}
+                                (map (fn [[state-name state]]
+                                       [(desugar-state-name state-name) (desugar-state state)]))
+                                (:states state-machine)))))
 

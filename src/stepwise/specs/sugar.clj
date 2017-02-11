@@ -61,11 +61,11 @@
   (s/coll-of (s/merge (s/keys :req-un [::sgr/condition])
                       (s/get-spec ::sgr/transition))))
 
+; TODO file bug w/ AWS -- default state name supposed to be optional but their validation fails w/o
 (s/def ::sgr/choice-state
   (s/merge (mdls/type= :choice)
-           (s/keys :req-un [::sgr/choices]
-                   :opt-un [::mdl/comment ::mdl/default-state-name ::mdl/input-path
-                            ::mdl/output-path])))
+           (s/keys :req-un [::sgr/choices ::sgr/default-state-name]
+                   :opt-un [::mdl/comment  ::mdl/input-path ::mdl/output-path])))
 
 (s/def ::sgr/branches
   (s/coll-of (s/keys :req-un [::sgr/start-at ::sgr/states]

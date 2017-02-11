@@ -15,7 +15,8 @@
                                                                 Transition$Builder
                                                                 TaskState$Builder
                                                                 Catcher$Builder Retrier$Builder
-                                                                ChoiceState$Builder)
+                                                                ChoiceState$Builder
+                                                                PassState$Builder WaitState$Builder)
            (com.amazonaws.services.stepfunctions.builder.conditions AndCondition
                                                                     BooleanEqualsCondition
                                                                     NotCondition
@@ -169,11 +170,20 @@
    ::ts-lt       map->TimestampLessThanCondition
    ::ts-lte      map->TimestampLessThanOrEqualCondition})
 
-(defn tuple->Condition [[condition attrs]]
-  ((condition-kw->map->Bean condition) attrs true))
+(def non-compound?
+  (-> (keys condition-kw->map->Bean)
+      set
+      (disj ::and ::or ::not)))
 
-(defmethod bd/->bean-val ::condition [_ conditions]
-  (tuple->Condition conditions))
+(defn tuple->Condition [[condition & attrs-or-children]]
+  (let [map->Bean (condition-kw->map->Bean condition)]
+    (condp contains? condition
+      #{::and ::or} (map->Bean {::conditions attrs-or-children} true)
+      #{::not} (map->Bean {::condition (first attrs-or-children)} true)
+      non-compound? (map->Bean (first attrs-or-children) true))))
+
+(defmethod bd/->bean-val ::condition [_ condition]
+  (tuple->Condition condition))
 
 (def bean-class->condition-kw
   {AndCondition                         ::and
@@ -231,9 +241,15 @@
   (doseq [retrier retriers]
     (.branch builder (map->Retrier retrier true))))
 
+(defmethod bd/builder-override [ParallelState ::transition] [_ ^ParallelState$Builder builder transition]
+  (.transition builder (map->Transition transition)))
+
 (def-builder-translation ParallelState
                          #{::branches ::catchers ::comment ::input-path ::output-path ::result-path
                            ::retriers ::transition})
+
+(defmethod bd/builder-override [PassState ::transition] [_ ^PassState$Builder builder transition]
+  (.transition builder (map->Transition transition)))
 
 (def-builder-translation PassState
                          #{::comment ::input-path ::output-path ::result ::result-path
@@ -242,6 +258,9 @@
 (def-builder-translation SucceedState
                          #{::comment ::input-path ::output-path ::terminal-state?}
                          ::terminal-state?)
+
+(defmethod bd/builder-override [TaskState ::transition] [_ ^TaskState$Builder builder transition]
+  (.transition builder (map->Transition transition)))
 
 (defmethod bd/builder-override [TaskState ::catchers] [_ ^TaskState$Builder builder catchers]
   (doseq [catcher catchers]
@@ -254,6 +273,9 @@
 (def-builder-translation TaskState
                          #{::catchers ::comment ::heartbeat-seconds ::input-path ::output-path
                            ::resource ::result-path ::retriers ::timeout-seconds ::transition})
+
+(defmethod bd/builder-override [WaitState ::transition] [_ ^WaitState$Builder builder transition]
+  (.transition builder (map->Transition transition)))
 
 (def-builder-translation WaitState
                          #{::comment ::input-path ::output-path ::transition ::wait-for})
@@ -289,8 +311,9 @@
 (defmethod bd/->map-val ::states [_ states]
   (into {}
         (map (fn [[name state]]
-               [name [(bean-class->state-kw (class state))
-                      (bd/bean->map state)]]))
+               [name (assoc (bd/bean->map state)
+                       ::type
+                       (bean-class->state-kw (class state)))]))
         states))
 
 (defmethod bd/builder-override [StateMachine ::states] [_ ^StateMachine$Builder builder states]
