@@ -26,7 +26,7 @@
   ([name]
    (create-activity @default-client name))
   ([^AWSStepFunctionsClient client name definition role-arn]
-   (model/->mapCreateStateMachineResult
+   (model/map->CreateStateMachineResult
      (.createStateMachine client
                           (model/map->CreateStateMachineRequest (syms->map name
                                                                            definition
