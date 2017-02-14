@@ -30,6 +30,6 @@
                                                     :next      :ender}]}
                   :ender     {:type :pass
                               :end  true}}}
-      (sgr/desugar-state-machine)
-      (mdl/map->StateMachine)))
+      (sgr/desugar)
+      (sgr/sugar)))
 

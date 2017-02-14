@@ -6,8 +6,14 @@
   (:import (java.util Date)
            (clojure.lang MapEntry)))
 
+(defmulti sugar* (fn [k _] k))
+(defmulti desugar* (fn [k _] k))
+
 (defn model-keyword [n]
   (keyword (name 'stepwise.model) (name n)))
+
+(defn sugar-keyword [n]
+  (keyword (name 'stepwise.sugar) (name n)))
 
 (def op->str
   {:=  "eq"
@@ -49,12 +55,12 @@
      {::mdl/variable                                 variable
       (value-class->expected-value-kw (class value)) value}]))
 
-(defn desugar-condition [condition]
+(defmethod desugar* ::condition [_ condition]
   (condp #(%1 %2) (first condition)
     char? [::mdl/bool-eq {::mdl/variable               condition
                           ::mdl/expected-value-boolean true}]
     #{:and :or :not} (into [(model-keyword (first condition))]
-                           (map desugar-condition)
+                           (map (partial desugar* ::condition))
                            (rest condition))
     #{:= :> :>= :< :<=} (desugar-comparison condition)))
 
@@ -83,16 +89,18 @@
 
 (defn sugar-comparison [op attrs]
   (let [[value-class-str op-str] (strs/split (name op) #"-")
-        expected-value-key (value-class->expected-value-kw (str->value-class value-class-str))]
+        expected-value-key (-> value-class-str
+                               str->value-class
+                               value-class->expected-value-kw)]
     [(str->op op-str)
      (::mdl/variable attrs)
      (attrs expected-value-key)]))
 
-(defn sugar-condition [[op & map-or-children]]
+(defmethod sugar* ::mdl/condition [_ [op & map-or-children]]
   (condp #(%1 %2) op
     #{::mdl/bool-eq} (::mdl/variable (first map-or-children))
     #{::mdl/not ::mdl/and ::mdl/or} (into [(keyword (name op))]
-                                          (map sugar-condition)
+                                          (map (partial sugar* ::mdl/condition))
                                           map-or-children)
     model-comparison-ops (sugar-comparison op (first map-or-children))))
 
@@ -102,194 +110,161 @@
 (defn sugar-state-name [state-name]
   (keyword state-name))
 
-(defn translate [amap from-key to-key afn]
-  (-> amap
-      (dissoc from-key)
-      (assoc to-key (afn (amap from-key)))))
-
-(defn sugar-transition [transition-having]
-  (condp = (::mdl/transition transition-having)
-    ::mdl/end (translate transition-having ::mdl/transition :end (constantly true))
-    (translate transition-having ::mdl/transition :next sugar-state-name)))
-
-(defn desugar-transition [transition-having]
-  (condp #(contains? %2 %1) transition-having
-    :end (translate transition-having
-                    :end
-                    ::mdl/transition
-                    (constantly ::mdl/end))
-    :next (translate transition-having
-                     :next
-                     ::mdl/transition
-                     desugar-state-name)))
-
-(def wait-interval-keys
-  #{:seconds
-    :seconds-path
-    :timestamp
-    :timestamp-path})
-
-(defmulti desugar-state* :type)
-(defmulti sugar-state* ::mdl/type)
-
-(defn desugar-state [state]
-  (-> state
-      (desugar-state*)
-      (translate :type ::mdl/type model-keyword)))
-
-(defn desugar-states [states]
+(defmethod sugar* ::mdl/states [_ states]
   (into {}
         (map (fn [[state-name state]]
-               [(desugar-state-name state-name)
-                (desugar-state state)]))
+               [(sugar-state-name state-name) state]))
         states))
 
-(defn sugar-state [state]
-  (-> state
-      (sugar-state*)
-      (translate ::mdl/type :type (comp keyword name))))
+(defmethod desugar* ::next [_ next-state]
+  {::key ::mdl/transition
+   ::val (desugar-state-name next-state)})
 
-(defn sugar-states [states]
+(defmethod desugar* ::end [_ _]
+  {::key ::mdl/transition
+   ::val ::mdl/end})
+
+(defmethod sugar* ::mdl/transition [_ transition]
+  (if (= transition ::mdl/end)
+    {::key :end
+     ::val true}
+    {::key :next
+     ::val (sugar-state-name transition)}))
+
+(defmethod desugar* ::type [_ state-type]
+  (model-keyword state-type))
+
+(defmethod sugar* ::mdl/type [_ state-type]
+  (keyword (name state-type)))
+
+(defmethod sugar* ::mdl/states [_ states]
   (into {}
         (map (fn [[state-name state]]
-               [(sugar-state-name state-name)
-                (sugar-state state)]))
+               [(sugar-state-name state-name) state]))
         states))
 
-(defmethod desugar-state* :wait [wait]
-  (let [interval-key (some wait-interval-keys (keys wait))
-        wait-for-key (model-keyword interval-key)]
-    (-> wait
-        (dissoc interval-key)
-        (assoc-in [::mdl/wait-for wait-for-key] (wait interval-key))
-        (desugar-transition))))
+(defmethod desugar* ::seconds [_ seconds]
+  {::key ::mdl/wait-for
+   ::val {::mdl/seconds seconds}})
 
-(defmethod sugar-state* ::mdl/wait [wait]
-  (let [wait-for-key (-> wait ::mdl/wait-for keys first)
-        interval-key (keyword (name wait-for-key))]
-    (-> wait
-        (dissoc ::mdl/wait-for)
-        (assoc interval-key (get-in wait [::mdl/wait-for wait-for-key]))
-        (sugar-transition))))
+(defmethod desugar* ::seconds-path [_ seconds-path]
+  {::key ::mdl/wait-for
+   ::val {::mdl/seconds-path seconds-path}})
 
-(defn desugar-choice [choice]
-  (-> choice
-      (translate :condition ::mdl/condition desugar-condition)
-      (desugar-transition)))
+(defmethod desugar* ::timestamp [_ timestamp]
+  {::key ::mdl/wait-for
+   ::val {::mdl/timestamp timestamp}})
 
-(defn sugar-choice [choice]
-  (-> choice
-      (translate ::mdl/condition :condition sugar-condition)
-      (sugar-transition)))
+(defmethod desugar* ::timestamp-path [_ timestamp-path]
+  {::key ::mdl/wait-for
+   ::val {::mdl/timestamp-path timestamp-path}})
 
-(defmethod desugar-state* :choice [choice-state]
-  (-> choice-state
-      (translate :choices ::mdl/choices (partial mapv desugar-choice))
-      ((fn [choice-state]
-         (if-let [state-name (:default-state-name choice-state)]
-           (-> choice-state
-               (dissoc :default-state-name)
-               (assoc ::mdl/default-state-name
-                      (desugar-state-name state-name)))
-           choice-state)))))
+(defmethod sugar* ::mdl/wait-for [_ wait-for]
+  (let [[k v] (first wait-for)]
+    {::key (sugar-keyword (name k))
+     ::val v}))
 
-(defmethod sugar-state* ::mdl/choice [choice-state]
-  (translate choice-state
-             ::mdl/choices
-             :choices
-             (partial mapv sugar-choice)))
+(defmethod desugar* ::default-state-name [_ state-name]
+  (desugar-state-name state-name))
 
-(defmethod desugar-state* :pass [pass]
-  (desugar-transition pass))
+(defmethod sugar* ::mdl/default-state-name [_ state-name]
+  (sugar-state-name state-name))
 
-(defmethod sugar-state* ::mdl/pass [pass]
-  (sugar-transition pass))
+(defn desugar-error [error]
+  (name error))
 
-(defn desugar-error-equals [error-equals-having]
-  (translate error-equals-having
-             :error-equals
-             ::mdl/error-equals
-             #(into #{}
-                    (map name)
-                    (if (seqable? %) % #{%}))))
+(defn sugar-error [error]
+  (keyword error))
 
-(defn sugar-error-equals [error-equals-having]
-  (translate error-equals-having
-             ::mdl/error-equals
-             :error-equals
-             (fn [error-equals]
-               (if (= (count error-equals) 1)
-                 (keyword (first error-equals))
-                 (into #{} (map keyword) error-equals)))))
+(defmethod desugar* ::error-equals [_ error-equals]
+  (into #{}
+        (map desugar-error)
+        (if (seqable? error-equals)
+          error-equals
+          #{error-equals})))
 
-(defn desugar-catcher [catcher]
-  (-> catcher
-      (desugar-error-equals)
-      (desugar-transition)))
+(defmethod sugar* ::mdl/error-equals [_ error-equals]
+  (if (= (count error-equals) 1)
+    (sugar-error (first error-equals))
+    (into #{} (map sugar-error) error-equals)))
 
-(defn sugar-catcher [catcher]
-  (-> catcher
-      (sugar-error-equals)
-      (sugar-transition)))
+(defmethod desugar* ::start-at [_ start-at]
+  (desugar-state-name start-at))
 
-(defmethod desugar-state* :task [task]
-  (-> task
-      (translate :catchers ::mdl/catchers (partial mapv desugar-catcher))
-      (translate :retriers ::mdl/retriers (partial mapv desugar-error-equals))
-      (desugar-transition)))
+(defmethod sugar* ::mdl/start-at [_ start-at]
+  (sugar-state-name start-at))
 
-(defmethod sugar-state* ::mdl/task [task]
-  (-> task
-      (translate ::mdl/catchers :catchers (partial mapv sugar-catcher))
-      (translate ::mdl/retriers :retriers (partial mapv sugar-error-equals))
-      (sugar-transition)))
+(defn renamespace-keys [match-key? target-ns]
+  (fn [node]
+    (if (and (instance? MapEntry node)
+             (match-key? (key node)))
+      (MapEntry. (keyword target-ns (name (key node)))
+                 (val node))
+      node)))
 
-(defn desugar-branch [branch]
-  (-> branch
-      (translate :start-at ::mdl/start-at desugar-state-name)
-      (translate :states ::mdl/states desugar-states)))
+(defn translate-keys [multifn target-ns]
+  (fn [node]
+    (if (and (instance? MapEntry node)
+             (get-method multifn (key node)))
+      (let [result (multifn (key node) (val node))]
+        (if (and (map? result)
+                 (contains? result ::key))
+          (MapEntry. (::key result)
+                     (::val result))
+          (MapEntry. (keyword target-ns (name (key node)))
+                     result)))
+      node)))
 
-(defn sugar-branch [branch]
-  (-> branch
-      (translate ::mdl/start-at :start-at sugar-state-name)
-      (translate ::mdl/states :states sugar-states)))
+(defn desugar-state-name-keys [node]
+  (if (and (map? node)
+           (contains? node :start-at)
+           (contains? node :states)
+           (map? (:states node)))
+    (update node
+            :states
+            (fn [states]
+              (into {}
+                    (map (fn [[state-name state]]
+                           [(desugar-state-name state-name) state]))
+                    states)))
+    node))
 
-(defmethod desugar-state* :parallel [parallel]
-  (-> parallel
-      (translate :catchers ::mdl/catchers (partial mapv desugar-catcher))
-      (translate :retriers ::mdl/retriers (partial mapv desugar-error-equals))
-      (translate :branches ::mdl/branches (partial mapv desugar-branch))
-      (desugar-transition)))
+(def bare-sugar-keys
+  (into #{}
+        (map (comp keyword name key))
+        (methods desugar*)))
 
-(defmethod sugar-state* ::mdl/parallel [parallel]
-  (-> parallel
-      (translate ::mdl/catchers :catchers (partial mapv sugar-catcher))
-      (translate ::mdl/retriers :retriers (partial mapv sugar-error-equals))
-      (translate ::mdl/branches :branches (partial mapv sugar-branch))
-      (sugar-transition)))
+(def pass-through-model-keys
+  #{::mdl/comment
+    ::mdl/input-path
+    ::mdl/output-path
+    ::mdl/result-path
+    ::mdl/backoff-rate
+    ::mdl/interval-seconds
+    ::mdl/max-attempts
+    ::mdl/heartbeat-seconds
+    ::mdl/timeout-seconds
+    ::mdl/branches
+    ::mdl/retriers
+    ::mdl/catchers
+    ::mdl/choices})
 
-(defn desugar-state-machine [state-machine]
-  (let [desugared (-> state-machine
-                      (translate :start-at ::mdl/start-at desugar-state-name)
-                      (translate :states ::mdl/states desugar-states))]
-    (walk/prewalk (fn [node]
-                    (if (and (instance? MapEntry node)
-                             (keyword? (key node))
-                             (nil? (namespace (key node))))
-                      [(keyword (name 'stepwise.model) (name (key node)))
-                       (val node)]
-                      node))
-                  desugared)))
+(def bare-pass-through-keys
+  (into #{}
+        (map (comp keyword name))
+        (conj pass-through-model-keys ::mdl/states)))
 
-(defn sugar-state-machine [state-machine]
-  (let [sugared (-> state-machine
-                    (translate ::mdl/start-at :start-at desugar-state-name)
-                    (translate ::mdl/states :states desugar-states))]
-    (walk/prewalk (fn [node]
-                    (if (and (instance? MapEntry node)
-                             (namespace (key node)))
-                      [(keyword (name (key node)))
-                       (val node)]
-                      node))
-                  sugared)))
+(defn desugar [state-machine]
+  (walk/prewalk (comp (translate-keys desugar* (name 'stepwise.model))
+                      (renamespace-keys bare-pass-through-keys (name 'stepwise.model))
+                      (renamespace-keys bare-sugar-keys (name 'stepwise.sugar))
+                      ; desugar state name keys first to avoid collisions with our unnamespaced
+                      ; state language keys
+                      desugar-state-name-keys)
+                state-machine))
+
+(defn sugar [state-machine]
+  (walk/prewalk (comp (translate-keys sugar* nil)
+                      (renamespace-keys pass-through-model-keys nil))
+                state-machine))
 
