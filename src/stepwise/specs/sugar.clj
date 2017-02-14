@@ -86,8 +86,8 @@
 (s/def ::sgr/parallel
   (s/merge (mdls/type= ::mdl/parallel)
            (s/keys :req-un [::sgr/branches]
-                   :opt-un [::sgr/catchers ::mdl/comment ::mdl/input-path ::mdl/output-path
-                            ::mdl/result-path ::sgr/retriers])
+                   :opt-un [::sgr/catchers ::sgr/retriers ::mdl/comment ::mdl/input-path
+                            ::mdl/output-path ::mdl/result-path])
            (s/get-spec ::sgr/transition)))
 
 (s/def ::sgr/pass
@@ -130,6 +130,6 @@
   (s/map-of keyword ::sgr/state))
 
 (s/def ::sgr/state-machine
-  (s/keys :req-un [::mdl/start-at ::sgr/states]
+  (s/keys :req-un [::sgr/start-at ::sgr/states]
           :opt-un [::mdl/comment ::mdl/timeout-seconds]))
 

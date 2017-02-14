@@ -89,6 +89,86 @@
               (main/sugar-state {::mdl/type       ::mdl/pass
                                  ::mdl/transition "next-state"}))))
 
-#_(test/deftest desugar-task
-    (test/is (= {::mdl/type ::mdl/task
-                 })))
+(test/deftest desugar-task
+  (test/is (= {::mdl/type       ::mdl/task
+               ::mdl/transition "next-state"
+               ::mdl/catchers   [{::mdl/error-equals #{"transition-error"}
+                                  ::mdl/transition   "after-transition-error"}]
+               ::mdl/retriers   [{::mdl/error-equals #{"another-retry-error"
+                                                       "retry-error"}}]}
+              (main/desugar-state {:type     :task
+                                   :next     :next-state
+                                   :catchers [{:error-equals :transition-error
+                                               :next         :after-transition-error}]
+                                   :retriers [{:error-equals #{:another-retry-error
+                                                               :retry-error}}]}))))
+
+(test/deftest sugar-task
+  (test/is (= {:type     :task
+               :next     :next-state
+               :catchers [{:error-equals :transition-error
+                           :next         :after-transition-error}]
+               :retriers [{:error-equals #{:another-retry-error
+                                           :retry-error}}]}
+              (main/sugar-state {::mdl/type       ::mdl/task
+                                 ::mdl/transition "next-state"
+                                 ::mdl/catchers   [{::mdl/error-equals #{"transition-error"}
+                                                    ::mdl/transition   "after-transition-error"}]
+                                 ::mdl/retriers   [{::mdl/error-equals #{"another-retry-error"
+                                                                         "retry-error"}}]}))))
+
+
+(test/deftest desugar-task
+  (test/is (= {::mdl/type       ::mdl/task
+               ::mdl/transition "next-state"
+               ::mdl/catchers   [{::mdl/error-equals #{"transition-error"}
+                                  ::mdl/transition   "after-transition-error"}]
+               ::mdl/retriers   [{::mdl/error-equals #{"another-retry-error"
+                                                       "retry-error"}}]}
+              (main/desugar-state {:type     :task
+                                   :next     :next-state
+                                   :catchers [{:error-equals :transition-error
+                                               :next         :after-transition-error}]
+                                   :retriers [{:error-equals #{:another-retry-error
+                                                               :retry-error}}]}))))
+
+(test/deftest desugar-parallel
+  (test/is (= {::mdl/type       ::mdl/parallel
+               ::mdl/transition "next-state"
+               ::mdl/catchers   [{::mdl/error-equals #{"transition-error"}
+                                  ::mdl/transition   "after-transition-error"}]
+               ::mdl/retriers   [{::mdl/error-equals #{"another-retry-error"
+                                                       "retry-error"}}]
+               ::mdl/branches   [{::mdl/start-at "start-at"
+                                  ::mdl/states   {"start-at" {::mdl/type       ::mdl/pass
+                                                              ::mdl/transition ::mdl/end}}}]}
+              (main/desugar-state {:type     :parallel
+                                   :next     :next-state
+                                   :catchers [{:error-equals :transition-error
+                                               :next         :after-transition-error}]
+                                   :retriers [{:error-equals #{:another-retry-error
+                                                               :retry-error}}]
+                                   :branches [{:start-at :start-at
+                                               :states   {:start-at {:type :pass
+                                                                     :end  true}}}]}))))
+
+(test/deftest sugar-parallel
+  (test/is (= {:type     :parallel
+               :next     :next-state
+               :catchers [{:error-equals :transition-error
+                           :next         :after-transition-error}]
+               :retriers [{:error-equals #{:another-retry-error
+                                           :retry-error}}]
+               :branches [{:start-at :start-at
+                           :states   {:start-at {:type :pass
+                                                 :end  true}}}]}
+              (main/sugar-state {::mdl/type       ::mdl/parallel
+                                 ::mdl/transition "next-state"
+                                 ::mdl/catchers   [{::mdl/error-equals #{"transition-error"}
+                                                    ::mdl/transition   "after-transition-error"}]
+                                 ::mdl/retriers   [{::mdl/error-equals #{"another-retry-error"
+                                                                         "retry-error"}}]
+                                 ::mdl/branches   [{::mdl/start-at "start-at"
+                                                    ::mdl/states   {"start-at" {::mdl/type       ::mdl/pass
+                                                                                ::mdl/transition ::mdl/end}}}]}))))
+
