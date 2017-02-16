@@ -1,41 +1,67 @@
 (ns stepwise.specs.sugar
   (:require [clojure.spec :as s]
             [stepwise.model :as mdl]
-            [stepwise.specs.model :as mdls]
+            [stepwise.specs.model]
             [stepwise.sugar :as sgr]
-            [clojure.spec.gen :as gen])
-  (:import (java.util Date)))
+            [clojure.spec.gen :as gen]
+            [clojure.walk :as walk])
+  (:import (java.util Date)
+           (clojure.lang LazySeq)))
 
-(s/def ::sgr/next keyword)
+(defn string-alphanumeric []
+  (gen/gen-for-name 'clojure.test.check.generators/string-alphanumeric))
+
+(defn gen-keywords []
+  (gen/fmap (fn [[ns kw]]
+              (keyword ns kw))
+            (gen/tuple (gen/one-of [(gen/return nil)
+                                    (gen/such-that not-empty
+                                                   (string-alphanumeric))])
+                       (string-alphanumeric))))
+
+(s/def ::sgr/keyword
+  ; TODO constrain
+  (s/with-gen (s/and keyword?
+                     #(not-empty (name %)))
+              gen-keywords))
+
+(s/def ::sgr/state-name ::sgr/keyword)
+
+(s/def ::sgr/next ::sgr/state-name)
 
 (s/def ::sgr/transition
   (s/with-gen (fn [transition]
                 (or (keyword? (:next transition))
                     (= (:end transition) true)))
-              (constantly (gen/return {:next :bleh
-                                       :end  true}))))
+              (constantly (gen/elements [{:next :bleh}
+                                         {:end true}]))))
+
+(defmacro constant [value]
+  `(s/with-gen #(= ~value %)
+               (constantly (gen/return ~value))))
 
 (s/def ::sgr/and
-  (s/cat :op #(= :and %)
+  (s/cat :op (constant :and)
          :conds (s/+ ::sgr/condition)))
 
 (s/def ::sgr/or
-  (s/cat :op #(= :or %)
+  (s/cat :op (constant :or)
          :conds (s/+ ::sgr/condition)))
 
 (s/def ::sgr/not
-  (s/cat :op #(= :not %)
+  (s/cat :op (constant :not)
          :conds ::sgr/condition))
 
 (s/def ::sgr/comparable
   (s/or :int int?
         :double double?
         :string string?
-        :date #(instance? Date %)))
+        :date (s/with-gen #(instance? Date %)
+                          (constantly (gen/return (Date.))))))
 
 (defmacro defcompare [spec-kw op-kw]
   `(s/def ~spec-kw
-     (s/cat :op #(= % ~op-kw)
+     (s/cat :op (constant ~op-kw)
             :variable ::mdl/reference-path
             :value ::sgr/comparable)))
 
@@ -59,43 +85,63 @@
 
 (s/def ::sgr/choices
   (s/coll-of (s/merge (s/keys :req-un [::sgr/condition])
-                      (s/get-spec ::sgr/transition))))
+                      (s/get-spec ::sgr/transition))
+             :gen-max 3))
+
+(s/def ::sgr/default-state-name ::sgr/state-name)
+
+(defn type= [type-name]
+  (let [unqual-name (-> type-name name keyword)]
+    (s/with-gen #(-> % :type (= unqual-name))
+                (constantly (gen/return {:type unqual-name})))))
 
 ; TODO file bug w/ AWS -- default state name supposed to be optional but their validation fails w/o
 (s/def ::sgr/choice-state
-  (s/merge (mdls/type= :choice)
+  (s/merge (type= :choice)
            (s/keys :req-un [::sgr/choices ::sgr/default-state-name]
-                   :opt-un [::mdl/comment  ::mdl/input-path ::mdl/output-path])))
+                   :opt-un [::mdl/comment ::mdl/input-path ::mdl/output-path])))
 
 (s/def ::sgr/branches
   (s/coll-of (s/keys :req-un [::sgr/start-at ::sgr/states]
-                     :opt-un [::mdl/comment])))
+                     :opt-un [::mdl/comment])
+             :gen-max 3))
+
+; also allow free-form strings for handling those from non clojure/keyword tasks
+(s/def ::sgr/error ::sgr/keyword)
 
 (s/def ::sgr/error-equals
-  (s/or :set (s/coll-of keyword?)
-        :single keyword?))
+  (s/or :set (s/coll-of ::sgr/error
+                        :gen-max 3
+                        :min-count 2)
+        :single ::sgr/error))
 
 (s/def ::sgr/catchers
   (s/coll-of (s/keys :req-un [::sgr/error-equals ::sgr/next]
-                     :opt-un [::mdl/result-path])))
+                     :opt-un [::mdl/result-path])
+             :gen-max 3))
 
 (s/def ::sgr/retriers
   (s/coll-of (s/keys :req-un [::sgr/error-equals]
-                     :opt-un [::mdl/backoff-rate ::mdl/interval-seconds ::mdl/max-attempts])))
+                     :opt-un [::mdl/backoff-rate ::mdl/interval-seconds ::mdl/max-attempts])
+             :gen-max 3))
 
 (s/def ::sgr/parallel
-  (s/merge (mdls/type= ::mdl/parallel)
+  (s/merge (type= ::mdl/parallel)
            (s/keys :req-un [::sgr/branches]
                    :opt-un [::sgr/catchers ::sgr/retriers ::mdl/comment ::mdl/input-path
                             ::mdl/output-path ::mdl/result-path])
            (s/get-spec ::sgr/transition)))
 
 (s/def ::sgr/pass
-  (s/merge (mdls/type= ::mdl/pass)
+  (s/merge (type= ::mdl/pass)
            (s/get-spec ::sgr/transition)))
 
+(s/def ::sgr/resource
+  (s/or :keyword ::sgr/keyword
+        :string string?))
+
 (s/def ::sgr/task
-  (s/merge (mdls/type= ::mdl/task)
+  (s/merge (type= ::mdl/task)
            (s/keys :req-un [::sgr/resource]
                    :opt-un [::sgr/catchers ::sgr/retriers ::mdl/comment ::mdl/heartbeat-seconds
                             ::mdl/input-path ::mdl/output-path ::mdl/result-path
@@ -103,7 +149,7 @@
            (s/get-spec ::sgr/transition)))
 
 (s/def ::sgr/wait-for
-  (s/merge (mdls/type= ::mdl/wait-for)
+  (s/merge (type= ::mdl/wait-for)
            (s/with-gen (fn [wait-for]
                          (or (instance? Date (:timestamp wait-for))
                              (string? (:timestamp-path wait-for))
@@ -117,19 +163,48 @@
            (s/keys :opt-un [::mdl/comment ::mdl/input-path ::mdl/output-path])
            (s/get-spec ::sgr/transition)))
 
+(s/def ::sgr/fail
+  (s/merge (type= ::mdl/fail)
+           (s/keys :req-un [::sgr/error ::mdl/cause]
+                   :opt-un [::mdl/comment])))
+
+(s/def ::sgr/succeed
+  (s/merge (type= ::mdl/succeed)
+           (s/keys :opt-un [::mdl/comment ::mdl/input-path ::mdl/output-path])))
+
 (s/def ::sgr/state
   (s/or :wait-for ::sgr/wait-for
         :choice ::sgr/choice-state
         :pass ::sgr/pass
         :task ::sgr/task
         :parallel ::sgr/parallel
-        :fail ::mdl/fail
-        :succeed ::mdl/succeed))
+        :fail ::sgr/fail
+        :succeed ::sgr/succeed))
+
+(s/def ::sgr/start-at ::sgr/state-name)
 
 (s/def ::sgr/states
-  (s/map-of keyword ::sgr/state))
+  (s/map-of ::sgr/state-name
+            ::sgr/state))
 
 (s/def ::sgr/state-machine
   (s/keys :req-un [::sgr/start-at ::sgr/states]
           :opt-un [::mdl/comment ::mdl/timeout-seconds]))
+
+(defn lazy-seq->vec [node]
+  (if (instance? LazySeq node)
+    (vec node)
+    node))
+
+(defn get-gen []
+  (let [condition-orig    (s/gen ::sgr/condition)
+        error-equals-orig (s/gen ::sgr/error-equals)]
+    (s/gen ::sgr/state-machine
+           {::sgr/condition    (constantly (gen/fmap (partial walk/prewalk lazy-seq->vec)
+                                                     condition-orig))
+            ::sgr/error-equals (constantly (gen/fmap (fn [error-equals]
+                                                       (if (seqable? error-equals)
+                                                         (set error-equals)
+                                                         error-equals))
+                                                     error-equals-orig))})))
 

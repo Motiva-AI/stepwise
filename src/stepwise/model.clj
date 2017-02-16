@@ -89,8 +89,6 @@
 
 (def-builder-translation Catcher #{::error-equals ::result-path ::transition})
 
-(def-builder-translation Branch #{::comment ::start-at ::states})
-
 (defmethod bd/->map-val ::transition [_ transition]
   (condp instance? transition
     NextStateTransition (.getNextStateName ^NextStateTransition transition)
@@ -229,24 +227,6 @@
 
 (def-builder-translation FailState #{::cause ::comment ::error})
 
-(defmethod bd/builder-override [ParallelState ::branches] [_ ^ParallelState$Builder builder branches]
-  (doseq [branch branches]
-    (.branch builder (map->Branch branch true))))
-
-(defmethod bd/builder-override [ParallelState ::catchers] [_ ^ParallelState$Builder builder catchers]
-  (doseq [catcher catchers]
-    (.branch builder (map->Catcher catcher true))))
-
-(defmethod bd/builder-override [ParallelState ::retriers] [_ ^ParallelState$Builder builder retriers]
-  (doseq [retrier retriers]
-    (.branch builder (map->Retrier retrier true))))
-
-(defmethod bd/builder-override [ParallelState ::transition] [_ ^ParallelState$Builder builder transition]
-  (.transition builder (map->Transition transition)))
-
-(def-builder-translation ParallelState
-                         #{::branches ::catchers ::comment ::input-path ::output-path ::result-path
-                           ::retriers ::transition})
 
 (defmethod bd/builder-override [PassState ::transition] [_ ^PassState$Builder builder transition]
   (.transition builder (map->Transition transition)))
@@ -280,6 +260,8 @@
 (def-builder-translation WaitState
                          #{::comment ::input-path ::output-path ::transition ::wait-for})
 
+(declare map->ParallelState)
+
 (def state-kw->map->Bean
   {::choice   map->ChoiceState
    ::fail     map->FailState
@@ -298,6 +280,27 @@
 (defmethod bd/builder-override [Branch ::states] [_ ^Branch$Builder builder states]
   (doseq [[name state] (states->bean-map states)]
     (.state builder name state)))
+
+(def-builder-translation Branch #{::comment ::start-at ::states})
+
+(defmethod bd/builder-override [ParallelState ::branches] [_ ^ParallelState$Builder builder branches]
+  (doseq [branch branches]
+    (.branch builder (map->Branch branch true))))
+
+(defmethod bd/builder-override [ParallelState ::catchers] [_ ^ParallelState$Builder builder catchers]
+  (doseq [catcher catchers]
+    (.branch builder (map->Catcher catcher true))))
+
+(defmethod bd/builder-override [ParallelState ::retriers] [_ ^ParallelState$Builder builder retriers]
+  (doseq [retrier retriers]
+    (.branch builder (map->Retrier retrier true))))
+
+(defmethod bd/builder-override [ParallelState ::transition] [_ ^ParallelState$Builder builder transition]
+  (.transition builder (map->Transition transition)))
+
+(def-builder-translation ParallelState
+                         #{::branches ::catchers ::comment ::input-path ::output-path ::result-path
+                           ::retriers ::transition})
 
 (def bean-class->state-kw
   {ChoiceState   ::choice
