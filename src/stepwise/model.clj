@@ -1,6 +1,7 @@
 (ns stepwise.model
   (:require [bean-dip.core :as bd]
-            [clojure.data.json :as json])
+            [stepwise.json :as json]
+            [clojure.string :as strs])
   (:import (com.amazonaws.services.stepfunctions.model CreateActivityRequest
                                                        CreateActivityResult
                                                        CreateStateMachineRequest
@@ -257,7 +258,7 @@
   (.transition builder (map->Transition transition)))
 
 (def-builder-translation PassState
-                         #{::comment ::input-path ::output-path ::result ::result-path
+                         #{::comment ::input-path ::output-path [::result String] ::result-path
                            ::transition})
 
 (def-builder-translation SucceedState
@@ -366,23 +367,17 @@
 (bd/def-translation DescribeActivityResult #{[:activity-arn ::arn] ::name ::creation-date})
 (bd/def-translation DescribeExecutionRequest #{[:execution-arn ::arn]})
 
-(defn deser-io-json [json-str]
-  (json/read-str json-str :key-fn keyword))
-
-(defn ser-io-json [data]
-  (json/write-str data))
-
 (defmethod bd/->map-val ::input [_ input]
-  (deser-io-json input))
+  (json/deser-io-doc input))
 
 (defmethod bd/->bean-val ::input [_ input]
-  (ser-io-json input))
+  (json/ser-io-doc input))
 
 (defmethod bd/->map-val ::output [_ input]
-  (deser-io-json input))
+  (json/deser-io-doc input))
 
 (defmethod bd/->bean-val ::output [_ output]
-  (ser-io-json output))
+  (json/ser-io-doc output))
 
 (bd/def-translation DescribeExecutionResult #{[:execution-arn ::arn]
                                               ::state-machine-arn
@@ -396,7 +391,9 @@
 (bd/def-translation DescribeStateMachineRequest #{[:state-machine-arn ::arn]})
 
 (defmethod bd/->map-val ::definition [_ definition]
-  (StateMachine/fromJson definition))
+  (-> (StateMachine/fromJson definition)
+      (.build)
+      (StateMachine->map)))
 
 (bd/def-translation DescribeStateMachineResult #{[:state-machine-arn ::arn]
                                                  ::name
@@ -456,20 +453,43 @@
    "ExecutionAborted"       ::execution-aborted-event-details,
    "ActivityStarted"        ::activity-started-event-details,
    "ActivityScheduled"      ::activity-scheduled-event-details,
-   "StateEntered"           ::state-entered-event-details,
+   "ChoiceStateEntered"     ::state-entered-event-details
+   "FailStateEntered"       ::state-entered-event-details
+   "ParallelStateEntered"   ::state-entered-event-details
+   "PassStateEntered"       ::state-entered-event-details
+   "SucceedStateEntered"    ::state-entered-event-details
+   "TaskStateEntered"       ::state-entered-event-details
+   "WaitStateEntered"       ::state-entered-event-details
    "ExecutionStarted"       ::execution-started-event-details,
    "ActivityTimedOut"       ::activity-timed-out-event-details,
    "ActivityScheduleFailed" ::activity-schedule-failed-event-details,
-   "StateExited"            ::state-exited-event-details,
+   "ChoiceStateExited"      ::state-exited-event-details
+   "FailStateExited"        ::state-exited-event-details
+   "ParallelStateExited"    ::state-exited-event-details
+   "PassStateExited"        ::state-exited-event-details
+   "SucceedStateExited"     ::state-exited-event-details
+   "TaskStateExited"        ::state-exited-event-details
+   "WaitStateExited"        ::state-exited-event-details
    "ExecutionFailed"        ::execution-failed-event-details,
    "ActivityFailed"         ::activity-failed-event-details,
    "ExecutionSucceeded"     ::execution-succeeded-event-details})
 
+(defn camel->name
+  "from Emerick, Grande, Carper 2012 p.70"
+  [s]
+  (->> (strs/split s #"(?<=[a-z])(?=[A-Z])")
+       (map strs/lower-case)
+       (interpose \-)
+       strs/join
+       keyword))
+
 (defmethod bd/->map-val ::events [_ events]
   (into []
         (map (fn [event]
-               (let [details-key (-> event ::event-type event-type->details-key)]
-                 (-> (select-keys event [::timestamp ::event-type ::event-id])
+               (let [event       (HistoryEvent->map event)
+                     details-key (-> event ::event-type event-type->details-key)]
+                 (-> (select-keys event [::timestamp ::event-id])
+                     (assoc ::event-type (camel->name (::event-type event)))
                      (merge (event details-key))))))
         events))
 
@@ -478,9 +498,6 @@
 (bd/def-translation ActivityListItem #{::activity-arn ::name})
 (bd/def-translation ListActivitiesRequest #{::max-results ::next-token})
 (bd/def-translation ListActivitiesResult #{::activities ::next-token})
-
-(defmethod bd/->bean-val ::status-filter [_ status-filter]
-  (name status-filter))
 
 (bd/def-translation ListExecutionsRequest #{::state-machine-arn
                                             [::status-filter String]

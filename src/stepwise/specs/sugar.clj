@@ -132,8 +132,12 @@
                             ::mdl/output-path ::mdl/result-path])
            (s/get-spec ::sgr/transition)))
 
+(s/def ::sgr/result map?)
+
 (s/def ::sgr/pass
   (s/merge (type= ::mdl/pass)
+           (s/keys :opt-un [::mdl/comment ::mdl/input-path ::mdl/output-path ::sgr/result
+                            ::mdl/result-path])
            (s/get-spec ::sgr/transition)))
 
 (s/def ::sgr/resource

@@ -2,7 +2,8 @@
   (:require [stepwise.model :as mdl]
             [clojure.set :as sets]
             [clojure.string :as strs]
-            [clojure.walk :as walk])
+            [clojure.walk :as walk]
+            [stepwise.json :as json])
   (:import (java.util Date)
            (clojure.lang MapEntry)))
 
@@ -60,9 +61,6 @@
                            (map (partial desugar* ::condition))
                            (rest condition))
     #{:= :> :>= :< :<=} (desugar-comparison condition)))
-
-(def str->value-class
-  (sets/map-invert value-class->str))
 
 (def str->op
   (sets/map-invert op->str))
@@ -175,6 +173,19 @@
 
 (defmethod sugar* ::mdl/start-at [_ start-at]
   (sugar-keyword start-at))
+
+; TODO
+(defmethod desugar* ::resource [_ resource]
+  resource)
+
+(defmethod sugar* ::mdl/resource [_ resource]
+  resource)
+
+(defmethod desugar* ::result [_ result]
+  (json/ser-io-doc result))
+
+(defmethod sugar* ::mdl/result [_ result]
+  (json/deser-io-doc result))
 
 (defn renamespace-keys [match-key? target-ns]
   (fn [node]

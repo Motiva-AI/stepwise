@@ -40,8 +40,17 @@
   ;(gen/sample (s/gen ::sgr/error))
   ;(lein test)
   #_(sgr/sugar-comparison :stepwise.model/numeric-eq #:stepwise.model{:variable "0", :expected-value-double 1.0})
-  (client/create-state-machine "test machine!"
-                               {:start-at :foo
-                                :states   {:foo {:state-type :succeed}}}
-                               "foo"))
+  ;#spy/p (client/describe-state-machine "arn:aws:states:us-west-2:256212633204:stateMachine:hello-world")
+  ;(client/delete-state-machine "arn:aws:states:us-west-2:256212633204:stateMachine:test-machine")
+  ;(Thread/sleep 1000)
+  ;(client/create-state-machine "test-machine"
+  ;                             {:start-at :foo
+  ;                              :states   {:foo {:state-type :pass
+  ;                                               :result     {:hi "werld"}
+  ;                                               :end        true}}}
+  ;                             "arn:aws:iam::256212633204:role/service-role/StatesExecutionRole-us-west-2")
+  ;(client/start-execution "arn:aws:states:us-west-2:256212633204:stateMachine:test-machine" {:input {:hi "foo"}})
+  ;#spy/p (client/get-execution-history "arn:aws:states:us-west-2:256212633204:execution:test-machine:ebba36d3-3a4c-4d51-a97b-d6409043a998")
+  (client/list-state-machines)
+  )
 
