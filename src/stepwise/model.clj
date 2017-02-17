@@ -1,8 +1,33 @@
 (ns stepwise.model
-  (:require [bean-dip.core :as bd])
-  (:import (com.amazonaws.services.stepfunctions.model CreateActivityRequest CreateActivityResult
+  (:require [bean-dip.core :as bd]
+            [clojure.data.json :as json])
+  (:import (com.amazonaws.services.stepfunctions.model CreateActivityRequest
+                                                       CreateActivityResult
                                                        CreateStateMachineRequest
-                                                       CreateStateMachineResult)
+                                                       CreateStateMachineResult
+                                                       DeleteActivityRequest
+                                                       DeleteStateMachineRequest
+                                                       DescribeActivityRequest
+                                                       DescribeActivityResult
+                                                       DescribeExecutionRequest
+                                                       DescribeExecutionResult
+                                                       DescribeStateMachineRequest
+                                                       DescribeStateMachineResult
+                                                       GetActivityTaskRequest
+                                                       GetActivityTaskResult
+                                                       GetExecutionHistoryRequest
+                                                       GetExecutionHistoryResult
+                                                       HistoryEvent
+                                                       ActivityFailedEventDetails
+                                                       ActivityScheduleFailedEventDetails
+                                                       ActivityScheduledEventDetails
+                                                       ActivityStartedEventDetails
+                                                       ActivitySucceededEventDetails
+                                                       ActivityTimedOutEventDetails
+                                                       ExecutionFailedEventDetails
+                                                       ExecutionStartedEventDetails
+                                                       ExecutionSucceededEventDetails
+                                                       ExecutionAbortedEventDetails ExecutionTimedOutEventDetails StateEnteredEventDetails StateExitedEventDetails ListActivitiesRequest ListActivitiesResult ActivityListItem ListExecutionsRequest ListExecutionsResult ExecutionListItem ListStateMachinesRequest ListStateMachinesResult StateMachineListItem SendTaskFailureRequest SendTaskFailureResult SendTaskHeartbeatRequest StartExecutionRequest StopExecutionRequest StartExecutionResult)
            (com.amazonaws.services.stepfunctions.builder StateMachine StateMachine$Builder)
            (com.amazonaws.services.stepfunctions.builder.states ChoiceState FailState ParallelState
                                                                 PassState SucceedState TaskState
@@ -273,8 +298,8 @@
 
 (defn states->bean-map [states]
   (into {}
-        (map (fn [[name {:keys [::type] :as attrs}]]
-               [name ((state-kw->map->Bean type) attrs true)]))
+        (map (fn [[name {:keys [::state-type] :as attrs}]]
+               [name ((state-kw->map->Bean state-type) attrs true)]))
         states))
 
 (defmethod bd/builder-override [Branch ::states] [_ ^Branch$Builder builder states]
@@ -315,7 +340,7 @@
   (into {}
         (map (fn [[name state]]
                [name (assoc (bd/bean->map state)
-                       ::type
+                       ::state-type
                        (bean-class->state-kw (class state)))]))
         states))
 
@@ -327,12 +352,159 @@
                          #{::comment ::start-at ::states ::timeout-seconds})
 
 (bd/def-translation CreateActivityRequest #{::name})
-(bd/def-translation CreateActivityResult #{::activity-arn ::creation-date})
+(bd/def-translation CreateActivityResult #{[:activity-arn ::arn] ::creation-date})
 
 (bd/def-translation CreateStateMachineRequest #{::name [::definition StateMachine] ::role-arn})
 
 (defmethod bd/->bean-val ::definition [_ definition]
   (map->StateMachine definition))
 
-(bd/def-translation CreateStateMachineResult #{::state-machine-arn ::creation-date})
+(bd/def-translation CreateStateMachineResult #{[:state-machine-arn ::arn] ::creation-date})
+(bd/def-translation DeleteActivityRequest #{[:activity-arn ::arn]})
+(bd/def-translation DeleteStateMachineRequest #{[:state-machine-arn ::arn]})
+(bd/def-translation DescribeActivityRequest #{[:activity-arn ::arn]})
+(bd/def-translation DescribeActivityResult #{[:activity-arn ::arn] ::name ::creation-date})
+(bd/def-translation DescribeExecutionRequest #{[:execution-arn ::arn]})
+
+(defn deser-io-json [json-str]
+  (json/read-str json-str :key-fn keyword))
+
+(defn ser-io-json [data]
+  (json/write-str data))
+
+(defmethod bd/->map-val ::input [_ input]
+  (deser-io-json input))
+
+(defmethod bd/->bean-val ::input [_ input]
+  (ser-io-json input))
+
+(defmethod bd/->map-val ::output [_ input]
+  (deser-io-json input))
+
+(defmethod bd/->bean-val ::output [_ output]
+  (ser-io-json output))
+
+(bd/def-translation DescribeExecutionResult #{[:execution-arn ::arn]
+                                              ::state-machine-arn
+                                              ::name
+                                              [::status String]
+                                              ::start-date
+                                              ::stop-date
+                                              ::input
+                                              ::output})
+
+(bd/def-translation DescribeStateMachineRequest #{[:state-machine-arn ::arn]})
+
+(defmethod bd/->map-val ::definition [_ definition]
+  (StateMachine/fromJson definition))
+
+(bd/def-translation DescribeStateMachineResult #{[:state-machine-arn ::arn]
+                                                 ::name
+                                                 [::status String]
+                                                 ::definition
+                                                 ::role-arn
+                                                 ::creation-date})
+
+(bd/def-translation GetActivityTaskRequest #{[:activity-arn ::arn]
+                                             ::worker-name})
+
+(bd/def-translation GetActivityTaskResult #{::task-token ::input})
+
+(bd/def-translation GetExecutionHistoryRequest #{[:execution-arn ::arn]
+                                                 ::max-results
+                                                 ::next-token
+                                                 ::reverse-order?})
+
+(bd/def-translation ActivityFailedEventDetails #{::error ::cause})
+(bd/def-translation ActivityScheduleFailedEventDetails #{::error ::cause})
+(bd/def-translation ActivityScheduledEventDetails #{::resource
+                                                    ::input
+                                                    [:timeout-in-seconds ::timeout-seconds]
+                                                    [:heartbeat-in-seconds ::heartbeat-seconds]})
+(bd/def-translation ActivityStartedEventDetails #{::worker-name})
+(bd/def-translation ActivitySucceededEventDetails #{::output})
+(bd/def-translation ActivityTimedOutEventDetails #{::error ::cause})
+(bd/def-translation ExecutionFailedEventDetails #{::error ::cause})
+(bd/def-translation ExecutionStartedEventDetails #{::input ::role-arn})
+(bd/def-translation ExecutionSucceededEventDetails #{::output})
+(bd/def-translation ExecutionAbortedEventDetails #{::error ::cause})
+(bd/def-translation ExecutionTimedOutEventDetails #{::error ::cause})
+(bd/def-translation StateEnteredEventDetails #{[:name ::state-name] ::input})
+(bd/def-translation StateExitedEventDetails #{[:name ::state-name] ::output})
+
+(bd/def-translation HistoryEvent #{::timestamp
+                                   [:type ::event-type String]
+                                   [:id ::event-id]
+                                   ::previous-event-id
+                                   ::activity-failed-event-details
+                                   ::activity-schedule-failed-event-details
+                                   ::activity-scheduled-event-details
+                                   ::activity-started-event-details
+                                   ::activity-succeeded-event-details
+                                   ::activity-timed-out-event-details
+                                   ::execution-failed-event-details
+                                   ::execution-started-event-details
+                                   ::execution-succeeded-event-details
+                                   ::execution-aborted-event-details
+                                   ::execution-timed-out-event-details
+                                   ::state-entered-event-details
+                                   ::state-exited-event-details})
+
+(def event-type->details-key
+  {"ActivitySucceeded"      ::activity-succeeded-event-details,
+   "ExecutionTimedOut"      ::execution-timed-out-event-details,
+   "ExecutionAborted"       ::execution-aborted-event-details,
+   "ActivityStarted"        ::activity-started-event-details,
+   "ActivityScheduled"      ::activity-scheduled-event-details,
+   "StateEntered"           ::state-entered-event-details,
+   "ExecutionStarted"       ::execution-started-event-details,
+   "ActivityTimedOut"       ::activity-timed-out-event-details,
+   "ActivityScheduleFailed" ::activity-schedule-failed-event-details,
+   "StateExited"            ::state-exited-event-details,
+   "ExecutionFailed"        ::execution-failed-event-details,
+   "ActivityFailed"         ::activity-failed-event-details,
+   "ExecutionSucceeded"     ::execution-succeeded-event-details})
+
+(defmethod bd/->map-val ::events [_ events]
+  (into []
+        (map (fn [event]
+               (let [details-key (-> event ::event-type event-type->details-key)]
+                 (-> (select-keys event [::timestamp ::event-type ::event-id])
+                     (merge (event details-key))))))
+        events))
+
+(bd/def-translation GetExecutionHistoryResult #{::next-token ::events})
+
+(bd/def-translation ActivityListItem #{::activity-arn ::name})
+(bd/def-translation ListActivitiesRequest #{::max-results ::next-token})
+(bd/def-translation ListActivitiesResult #{::activities ::next-token})
+
+(defmethod bd/->bean-val ::status-filter [_ status-filter]
+  (name status-filter))
+
+(bd/def-translation ListExecutionsRequest #{::state-machine-arn
+                                            [::status-filter String]
+                                            ::next-token
+                                            ::max-results})
+(bd/def-translation ListExecutionsResult #{::executions ::next-token})
+(bd/def-translation ExecutionListItem #{[:execution-arn ::arn]
+                                        ::state-machine-arn
+                                        ::name
+                                        [::status String]
+                                        ::start-date
+                                        ::stop-date})
+
+(bd/def-translation ListStateMachinesRequest #{::max-results ::next-token})
+(bd/def-translation ListStateMachinesResult #{::state-machines ::next-token})
+(bd/def-translation StateMachineListItem #{[:state-machine-arn ::arn]
+                                           ::name
+                                           ::creation-date})
+
+(bd/def-translation SendTaskFailureRequest #{::cause ::error ::task-token})
+(bd/def-translation SendTaskHeartbeatRequest #{::task-token})
+
+(bd/def-translation StartExecutionRequest #{::state-machine-arn ::input ::name})
+(bd/def-translation StartExecutionResult #{[:execution-arn ::arn] ::start-date})
+
+(bd/def-translation StopExecutionRequest #{[:execution-arn ::arn] ::cause ::error})
 

@@ -125,10 +125,10 @@
     {::key :next
      ::val (sugar-keyword transition)}))
 
-(defmethod desugar* ::type [_ state-type]
+(defmethod desugar* ::state-type [_ state-type]
   (model-keyword state-type))
 
-(defmethod sugar* ::mdl/type [_ state-type]
+(defmethod sugar* ::mdl/state-type [_ state-type]
   (keyword (name state-type)))
 
 (defmethod desugar* ::seconds [_ seconds]

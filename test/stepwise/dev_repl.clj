@@ -8,6 +8,7 @@
             [clojure.tools.namespace.repl :as ctn]
             [clojure.walk :as walk]
             [stepwise.specs.model]
+            [stepwise.client :as client]
             [clojure.spec :as s]
             [clojure.test.check.generators :as gen]))
 
@@ -37,6 +38,10 @@
         (sgr/desugar)
         (sgr/sugar))
   ;(gen/sample (s/gen ::sgr/error))
-  (lein test)
-  #_(sgr/sugar-comparison :stepwise.model/numeric-eq #:stepwise.model{:variable "0", :expected-value-double 1.0}))
+  ;(lein test)
+  #_(sgr/sugar-comparison :stepwise.model/numeric-eq #:stepwise.model{:variable "0", :expected-value-double 1.0})
+  (client/create-state-machine "test machine!"
+                               {:start-at :foo
+                                :states   {:foo {:state-type :succeed}}}
+                               "foo"))
 

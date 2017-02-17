@@ -11,5 +11,6 @@
                                   (pjstadig.humane-test-output/activate!)]
                    :main         stepwise.dev-repl}}
   :dependencies [[uwcpdx/bean-dip "0.6.0-SNAPSHOT"]
+                 [org.clojure/data.json "0.2.6"]
                  [com.amazonaws/aws-java-sdk-stepfunctions "1.11.86"]])
 
