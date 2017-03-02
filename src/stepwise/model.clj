@@ -1,6 +1,6 @@
 (ns stepwise.model
   (:require [bean-dip.core :as bd]
-            [stepwise.json :as json]
+            [stepwise.serialization :as ser]
             [clojure.string :as strs])
   (:import (com.amazonaws.services.stepfunctions.model CreateActivityRequest
                                                        CreateActivityResult
@@ -28,7 +28,7 @@
                                                        ExecutionFailedEventDetails
                                                        ExecutionStartedEventDetails
                                                        ExecutionSucceededEventDetails
-                                                       ExecutionAbortedEventDetails ExecutionTimedOutEventDetails StateEnteredEventDetails StateExitedEventDetails ListActivitiesRequest ListActivitiesResult ActivityListItem ListExecutionsRequest ListExecutionsResult ExecutionListItem ListStateMachinesRequest ListStateMachinesResult StateMachineListItem SendTaskFailureRequest SendTaskFailureResult SendTaskHeartbeatRequest StartExecutionRequest StopExecutionRequest StartExecutionResult)
+                                                       ExecutionAbortedEventDetails ExecutionTimedOutEventDetails StateEnteredEventDetails StateExitedEventDetails ListActivitiesRequest ListActivitiesResult ActivityListItem ListExecutionsRequest ListExecutionsResult ExecutionListItem ListStateMachinesRequest ListStateMachinesResult StateMachineListItem SendTaskFailureRequest SendTaskFailureResult SendTaskHeartbeatRequest StartExecutionRequest StopExecutionRequest StartExecutionResult SendTaskSuccessRequest)
            (com.amazonaws.services.stepfunctions.builder StateMachine StateMachine$Builder)
            (com.amazonaws.services.stepfunctions.builder.states ChoiceState FailState ParallelState
                                                                 PassState SucceedState TaskState
@@ -276,6 +276,9 @@
   (doseq [retrier retriers]
     (.retrier builder (map->Retrier retrier true))))
 
+(defmethod bd/->bean-val ::timeout-seconds [_ timeout-seconds]
+  (int timeout-seconds))
+
 (def-builder-translation TaskState
                          #{::catchers ::comment ::heartbeat-seconds ::input-path ::output-path
                            ::resource ::result-path ::retriers ::timeout-seconds ::transition})
@@ -368,16 +371,16 @@
 (bd/def-translation DescribeExecutionRequest #{[:execution-arn ::arn]})
 
 (defmethod bd/->map-val ::input [_ input]
-  (json/deser-io-doc input))
+  (ser/deser-io-doc input))
 
 (defmethod bd/->bean-val ::input [_ input]
-  (json/ser-io-doc input))
+  (ser/ser-io-doc input))
 
 (defmethod bd/->map-val ::output [_ input]
-  (json/deser-io-doc input))
+  (ser/deser-io-doc input))
 
 (defmethod bd/->bean-val ::output [_ output]
-  (json/ser-io-doc output))
+  (ser/ser-io-doc output))
 
 (bd/def-translation DescribeExecutionResult #{[:execution-arn ::arn]
                                               ::state-machine-arn
@@ -517,6 +520,7 @@
                                            ::name
                                            ::creation-date})
 
+(bd/def-translation SendTaskSuccessRequest #{::task-token ::output})
 (bd/def-translation SendTaskFailureRequest #{::cause ::error ::task-token})
 (bd/def-translation SendTaskHeartbeatRequest #{::task-token})
 

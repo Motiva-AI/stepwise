@@ -132,7 +132,9 @@
                             ::mdl/output-path ::mdl/result-path])
            (s/get-spec ::sgr/transition)))
 
-(s/def ::sgr/result map?)
+(s/def ::sgr/result
+  (s/with-gen map?
+              (constantly (gen/return {:some "results"}))))
 
 (s/def ::sgr/pass
   (s/merge (type= ::mdl/pass)
@@ -140,13 +142,9 @@
                             ::mdl/result-path])
            (s/get-spec ::sgr/transition)))
 
-(s/def ::sgr/resource
-  (s/or :keyword ::sgr/keyword
-        :string string?))
-
 (s/def ::sgr/task
   (s/merge (type= ::mdl/task)
-           (s/keys :req-un [::sgr/resource]
+           (s/keys :req-un [::mdl/resource]
                    :opt-un [::sgr/catchers ::sgr/retriers ::mdl/comment ::mdl/heartbeat-seconds
                             ::mdl/input-path ::mdl/output-path ::mdl/result-path
                             ::mdl/timeout-seconds])

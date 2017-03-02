@@ -12,5 +12,8 @@
                    :main         stepwise.dev-repl}}
   :dependencies [[uwcpdx/bean-dip "0.6.0-SNAPSHOT"]
                  [org.clojure/data.json "0.2.6"]
+                 [org.clojure/core.async "0.3.441"]
+                 [com.amazonaws/aws-java-sdk-iam "1.11.86"]
+                 [com.amazonaws/aws-java-sdk-sts "1.11.86"]
                  [com.amazonaws/aws-java-sdk-stepfunctions "1.11.86"]])
 

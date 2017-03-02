@@ -20,3 +20,6 @@
 (s/def ::mdl/comment string?)
 (s/def ::mdl/cause string?)
 
+; TODO needs to be a valid arn
+(s/def ::mdl/resource string?)
+

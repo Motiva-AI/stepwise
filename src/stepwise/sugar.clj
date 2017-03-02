@@ -3,7 +3,8 @@
             [clojure.set :as sets]
             [clojure.string :as strs]
             [clojure.walk :as walk]
-            [stepwise.json :as json])
+            [stepwise.serialization :as json]
+            [stepwise.serialization :as ser])
   (:import (java.util Date)
            (clojure.lang MapEntry)))
 
@@ -97,20 +98,9 @@
                                           map-or-children)
     model-comparison-ops (sugar-comparison op (first map-or-children))))
 
-(defn desugar-keyword [state-name]
-  (-> state-name
-      str
-      (strs/replace #"^:" "")
-      (strs/replace #"/" "__")))
-
-(defn sugar-keyword [state-name]
-  (-> state-name
-      (strs/replace #"__" "/")
-      keyword))
-
 (defmethod desugar* ::next [_ next-state]
   {::key ::mdl/transition
-   ::val (desugar-keyword next-state)})
+   ::val (ser/ser-keyword-name next-state)})
 
 (defmethod desugar* ::end [_ _]
   {::key ::mdl/transition
@@ -121,13 +111,15 @@
     {::key :end
      ::val true}
     {::key :next
-     ::val (sugar-keyword transition)}))
+     ::val (ser/deser-keyword-name transition)}))
 
-(defmethod desugar* ::state-type [_ state-type]
-  (model-keyword state-type))
+(defmethod desugar* ::type [_ state-type]
+  {::key ::mdl/state-type
+   ::val (model-keyword state-type)})
 
 (defmethod sugar* ::mdl/state-type [_ state-type]
-  (keyword (name state-type)))
+  {::key :type
+   ::val (keyword (name state-type))})
 
 (defmethod desugar* ::seconds [_ seconds]
   {::key ::mdl/wait-for
@@ -151,35 +143,28 @@
      ::val v}))
 
 (defmethod desugar* ::default-state-name [_ state-name]
-  (desugar-keyword state-name))
+  (ser/ser-keyword-name state-name))
 
 (defmethod sugar* ::mdl/default-state-name [_ state-name]
-  (sugar-keyword state-name))
+  (ser/deser-keyword-name state-name))
 
 (defmethod desugar* ::error-equals [_ error-equals]
   (into #{}
-        (map desugar-keyword)
+        (map ser/ser-keyword-name)
         (if (seqable? error-equals)
           error-equals
           #{error-equals})))
 
 (defmethod sugar* ::mdl/error-equals [_ error-equals]
   (if (= (count error-equals) 1)
-    (sugar-keyword (first error-equals))
-    (into #{} (map sugar-keyword) error-equals)))
+    (ser/deser-keyword-name (first error-equals))
+    (into #{} (map ser/deser-keyword-name) error-equals)))
 
 (defmethod desugar* ::start-at [_ start-at]
-  (desugar-keyword start-at))
+  (ser/ser-keyword-name start-at))
 
 (defmethod sugar* ::mdl/start-at [_ start-at]
-  (sugar-keyword start-at))
-
-; TODO
-(defmethod desugar* ::resource [_ resource]
-  resource)
-
-(defmethod sugar* ::mdl/resource [_ resource]
-  resource)
+  (ser/deser-keyword-name start-at))
 
 (defmethod desugar* ::result [_ result]
   (json/ser-io-doc result))
@@ -241,7 +226,8 @@
     ::mdl/retriers
     ::mdl/catchers
     ::mdl/choices
-    ::mdl/states})
+    ::mdl/states
+    ::mdl/resource})
 
 (def bare-pass-through-keys
   (into #{}
@@ -253,13 +239,14 @@
                       (renamespace-keys bare-pass-through-keys (name 'stepwise.model))
                       (renamespace-keys bare-sugar-keys (name 'stepwise.sugar))
                       ; desugar state name keys first to avoid collisions
-                      (transform-state-name-keys desugar-keyword))
+                      (transform-state-name-keys ser/ser-keyword-name))
                 state-machine))
+
 (defn sugar [state-machine]
   (walk/prewalk
     ; sugar state name keys last to avoid key collisions
     ; TODO not sure why this doesn't work when instead included in the function composition below
-    (transform-state-name-keys sugar-keyword)
+    (transform-state-name-keys ser/deser-keyword-name)
     (walk/prewalk (comp (translate-keys sugar* nil)
                         (renamespace-keys pass-through-model-keys nil))
                   state-machine)))

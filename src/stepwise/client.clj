@@ -1,6 +1,5 @@
 (ns stepwise.client
-  (:require [stepwise.model :as mdl]
-            [stepwise.sugar :as sgr])
+  (:require [stepwise.model :as mdl])
   (:import (com.amazonaws.services.stepfunctions AWSStepFunctionsClient
                                                  AWSStepFunctionsClientBuilder)))
 
@@ -44,14 +43,13 @@
   ([name definition role-arn]
    (create-state-machine (get-default-client) name definition role-arn))
   ([^AWSStepFunctionsClient client name definition role-arn]
-   (let [definition (sgr/desugar definition)]
-     (->> (syms->map name
-                     role-arn
-                     definition)
-          mdl/map->CreateStateMachineRequest
-          (.createStateMachine client)
-          mdl/CreateStateMachineResult->map
-          ::mdl/arn))))
+   (->> (syms->map name
+                   role-arn
+                   definition)
+        mdl/map->CreateStateMachineRequest
+        (.createStateMachine client)
+        mdl/CreateStateMachineResult->map
+        ::mdl/arn)))
 
 (defn delete-activity
   ([arn] (delete-activity (get-default-client) arn))
@@ -84,11 +82,10 @@
 (defn describe-state-machine
   ([arn] (describe-state-machine (get-default-client) arn))
   ([^AWSStepFunctionsClient client arn]
-   (let [description (->> (syms->map arn)
-                          mdl/map->DescribeStateMachineRequest
-                          (.describeStateMachine client)
-                          mdl/DescribeStateMachineResult->map)]
-     (update description ::mdl/definition sgr/sugar))))
+   (->> (syms->map arn)
+        mdl/map->DescribeStateMachineRequest
+        (.describeStateMachine client)
+        mdl/DescribeStateMachineResult->map)))
 
 (defn get-activity-task
   ([arn]
@@ -155,6 +152,15 @@
    (->> (syms->map task-token cause error)
         mdl/map->SendTaskFailureRequest
         (.sendTaskFailure client))
+   nil))
+
+(defn send-task-success
+  ([task-token output]
+   (send-task-success (get-default-client) task-token output))
+  ([^AWSStepFunctionsClient client task-token output]
+   (->> (syms->map task-token output)
+        mdl/map->SendTaskSuccessRequest
+        (.sendTaskSuccess client))
    nil))
 
 (defn send-task-heartbeat
