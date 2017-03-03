@@ -1,6 +1,7 @@
 (ns stepwise.dev-repl
   (:require [stepwise.model :as mdl]
             [stepwise.sugar :as sgr]
+            [stepwise.reloaded :as reloaded]
             [stepwise.core :as core]
             [clojure.spec.gen :as sgen]
             [clojure.repl :refer :all]
@@ -17,8 +18,6 @@
 
 (defn reset []
   (ctn/refresh :after 'stepwise.dev-repl/go))
-
-
 
 (def state-machines
   {::analysis-run {:start-at :validate-input
@@ -56,12 +55,12 @@
         (sgr/desugar)
         (sgr/sugar))
   ;(gen/sample (s/gen ::sgr/error))
-  (lein test)
+  ;(lein test)
   #_(sgr/sugar-comparison :stepwise.model/numeric-eq #:stepwise.model{:variable "0", :expected-value-double 1.0})
   ;#spy/p (client/describe-state-machine "arn:aws:states:us-west-2:256212633204:stateMachine:hello-world")
   ;(client/delete-state-machine "arn:aws:states:us-west-2:256212633204:stateMachine:test-machine")
   ;(Thread/sleep 1000)
-  ;(client/create-state-machine "test-machine3"
+  ;(client/create-state-machine "test-machine"
   ;                             {:start-at :foo
   ;                              :states   {:foo {:type    :wait
   ;                                               :seconds 600
@@ -77,22 +76,42 @@
                                                           :end      true}}}}
                        {::add (fn [])})
   #_(let [namespace   "ncgl-dev-dacc"
-        rand-ns     (str (rand-int 20))
-        machine-id  (keyword "dev-repl" rand-ns)
-        activity-kw (keyword "dev-repl" rand-ns)
-        workers     (core/start-workers namespace {activity-kw (fn [{:keys [a b]}] (throw (ex-info "hi" {:error :blamo})))})]
-    (core/create-state-machine namespace
-                               machine-id
-                               {:start-at :foo
-                                :states   {:foo {:type            :task
-                                                 :resource        activity-kw
-                                                 :timeout-seconds 3
-                                                 :end             true}}})
+          rand-ns     (str (rand-int 20))
+          machine-id  (keyword "dev-repl" rand-ns)
+          activity-kw (keyword "dev-repl" rand-ns)
+          workers     (core/start-workers namespace {activity-kw (fn [{:keys [a b]}] (throw (ex-info "hi" {:error :blamo})))})]
+      (core/create-state-machine namespace
+                                 machine-id
+                                 {:start-at :foo
+                                  :states   {:foo {:type            :task
+                                                   :resource        activity-kw
+                                                   :timeout-seconds 3
+                                                   :end             true}}})
 
-    #spy/p (core/run-execution namespace
-                               machine-id
-                               {:input {:a 1
-                                        :b 2}})
-    (core/shutdown-workers workers)
-    ))
+      #spy/p (core/run-execution namespace
+                                 machine-id
+                                 {:input {:a 1
+                                          :b 2}})
+      (core/shutdown-workers workers)
+      )
+
+  ;(core/create-state-machine "ncgl-dev-dacc"
+  ;                           ::machine
+  ;                           {:start-at :foo
+  ;                            :states   {:foo {:type            :task
+  ;                                             :resource        ::activity
+  ;                                             :timeout-seconds 3
+  ;                                             :end             true}}})
+
+  (reloaded/run-execution "ncgl-dev-dacc"
+                          :test-machine
+                          {:start-at :do-the-sum
+                           :states   {:do-the-sum {:type            :task
+                                                   :resource        :sum
+                                                   :timeout-seconds 3
+                                                   :end             true}}}
+                          {:sum (fn [{:keys [a b]}] (+ a b))}
+                          {:a 1
+                           :b 2})
+  )
 

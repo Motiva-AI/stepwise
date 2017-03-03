@@ -1,6 +1,6 @@
-(ns stepwise.activities-test
+(ns stepwise.workers-test
   (:require [clojure.test :as test]
-            [stepwise.activities :as main]
+            [stepwise.workers :as main]
             [clojure.core.async :as async]))
 
 (defn boot [do-task-fn]
@@ -61,10 +61,10 @@
           {:keys [term-chan exited-chan]} (boot capture-interrupted)]
       (test/is (= term-chan
                   (second (async/alts!! [[term-chan :kill]
-                                         (async/timeout 10)]))))
+                                         (async/timeout 100)]))))
       (test/is (= :done
                   (first (async/alts!! [exited-chan
-                                        (async/timeout 10)]))))
+                                        (async/timeout 100)]))))
       (test/is (instance? InterruptedException
                           (deref got-exception 20 :timeout)))))
 
@@ -77,13 +77,13 @@
           {:keys [term-chan exited-chan]} (boot capture-interrupted)]
       (test/is (= term-chan
                   (second (async/alts!! [[term-chan :shutdown]
-                                         (async/timeout 10)]))))
+                                         (async/timeout 100)]))))
       (test/is (= term-chan
                   (second (async/alts!! [[term-chan :kill]
-                                         (async/timeout 10)]))))
+                                         (async/timeout 100)]))))
       (test/is (= :done
                   (first (async/alts!! [exited-chan
-                                        (async/timeout 10)]))))
+                                        (async/timeout 100)]))))
       (test/is (instance? InterruptedException
                           (deref got-exception 20 :timeout))))))
 
