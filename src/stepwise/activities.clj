@@ -2,6 +2,7 @@
   (:refer-clojure :exclude [ensure])
   (:require [clojure.walk :as walk]
             [stepwise.arns :as arns]
+            [stepwise.interceptors :as interceptors]
             [stepwise.model :as mdl]
             [stepwise.client :as client])
   (:import (clojure.lang MapEntry)))
@@ -36,4 +37,19 @@
         (map (fn [kw-name]
                [kw-name (ensure env-name kw-name)]))
         kw-names))
+
+(defn make-handler-interceptor [handler-fn]
+  [:handler
+   {:before (fn [{:keys [task] :as context}]
+              (assoc context :task (handler-fn task)))}])
+
+(defn compile-interceptors [activity->handler]
+  (into {}
+        (map (fn [[activity handler]]
+               [activity
+                (if (fn? handler)
+                  handler
+                  (interceptors/compile (conj (vec (:interceptors handler))
+                                              (make-handler-interceptor handler))))]))
+        activity->handler))
 

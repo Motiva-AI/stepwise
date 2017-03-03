@@ -1,4 +1,4 @@
-(defproject stepwise "0.1.0-SNAPSHOT"
+(defproject uwcpdx/stepwise "0.1.0-SNAPSHOT"
   :profiles {:dev {:dependencies [[spyscope "0.1.7-SNAPSHOT"]
                                   [org.clojure/tools.namespace "0.2.11"]
                                   [org.clojure/clojure "1.9.0-alpha14"]

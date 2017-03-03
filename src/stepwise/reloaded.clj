@@ -96,7 +96,9 @@
           _             (client/create-state-machine (arns/make-name env-name machine-name)
                                                      definition
                                                      (iam/ensure-execution-role))
-          workers       (workers/boot (sets/rename-keys task-handlers activity->arn))
+          workers       (workers/boot (-> task-handlers
+                                          (sets/rename-keys activity->arn)
+                                          (activities/compile-interceptors)))
           result        (core/run-execution env-name machine-name {:input input})]
       (core/kill-workers workers)
       result)))
