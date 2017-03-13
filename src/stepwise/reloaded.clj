@@ -9,7 +9,7 @@
             [stepwise.sugar :as sgr]
             [stepwise.iam :as iam]
             [stepwise.workers :as workers])
-  (:import (com.amazonaws.services.stepfunctions.model StateMachineDeletingException StateMachineDoesNotExistException)))
+  (:import (com.amazonaws.services.stepfunctions.model StateMachineDeletingException StateMachineDoesNotExistException ExecutionDoesNotExistException)))
 
 ; Issues
 ; ------
@@ -56,7 +56,8 @@
   (doseq [arn arns]
     (doseq [execution (try (::mdl/executions (client/list-executions arn))
                            (catch StateMachineDoesNotExistException _))]
-      (client/stop-execution (::mdl/arn execution)))
+      (try (client/stop-execution (::mdl/arn execution))
+           (catch ExecutionDoesNotExistException _)))
     (try (client/delete-state-machine arn)
          (catch StateMachineDeletingException _))))
 

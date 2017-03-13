@@ -11,11 +11,11 @@
                     "some-arn"
                     nil
                     (fn poll [_]
-                      (async/go :task))
+                      (async/go :input))
                     (fn handle [_ _]
                       (let [chan (async/chan)]
                         [chan
-                         (future (do-task-fn :task)
+                         (future (do-task-fn :input)
                                  (async/>!! chan :done)
                                  (async/close! chan))])))]
     {:term-chan   term-chan
@@ -25,7 +25,7 @@
   (test/testing "passes one task to handler and shuts down cleanly"
     (let [got-task (promise)
           {:keys [term-chan exited-chan]} (boot #(deliver got-task %))]
-      (test/is (= :task
+      (test/is (= :input
                   (deref got-task 10 :timeout)))
       (test/is (= term-chan
                   (second (async/alts!! [[term-chan :shutdown]
@@ -41,9 +41,9 @@
           {:keys [term-chan exited-chan]} (boot (fn [task]
                                                   (when-let [prom (async/poll! promise-chan)]
                                                     (deliver prom task))))]
-      (test/is (= :task
+      (test/is (= :input
                   (deref promise-a 10 :timeout)))
-      (test/is (= :task
+      (test/is (= :input
                   (deref promise-b 10 :timeout)))
       (test/is (= term-chan
                   (second (async/alts!! [[term-chan :shutdown]

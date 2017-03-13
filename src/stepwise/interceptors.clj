@@ -4,9 +4,10 @@
 ; cribbed from re-frame -- thanks re-frame!
 
 (defn- invoke-interceptor-fn
-  [context interceptor direction]
+  ; TODO clean up names
+  [context [_ interceptor] direction]
   (if-let [f (get interceptor direction)]
-    (f context)
+    (do (f context))
     context))
 
 (defn- invoke-interceptors
@@ -30,11 +31,14 @@
 (defn compile
   "Returns a fn that exercises a queue of interceptors against a task and returns a result"
   [queue]
-  (fn execute [task]
-    (-> {:task  task
-         :queue queue}
+  (fn execute [input send-heartbeat]
+    (-> {:input   input
+         :output  nil
+         :context {:send-heartbeat send-heartbeat}
+         :stack   []
+         :queue   queue}
         (invoke-interceptors :before)
         change-direction
         (invoke-interceptors :after)
-        :result)))
+        :output)))
 

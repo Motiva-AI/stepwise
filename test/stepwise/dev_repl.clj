@@ -1,6 +1,7 @@
 (ns stepwise.dev-repl
   (:require [stepwise.model :as mdl]
             [stepwise.sugar :as sgr]
+            [ncgl.db.seed :as seed]
             [stepwise.reloaded :as reloaded]
             [stepwise.core :as core]
             [clojure.spec.gen :as sgen]
@@ -20,8 +21,8 @@
   (ctn/refresh :after 'stepwise.dev-repl/go))
 
 (def state-machines
-  {::analysis-run {:start-at :validate-input
-                   :states   {:validate-input    {:type :task}
+  {::analysis-run {:start-at :resolve-input
+                   :states   {:resolve-input     {:type :task}
                               :describe-task-def {:type        :task
                                                   :result-path "$.task-def"
                                                   :next        :write-params-json}
@@ -104,11 +105,11 @@
   ;                                             :end             true}}})
 
   (reloaded/run-execution "ncgl-dev-dacc"
-                          :test-machine
+                          :test-machine-v2
                           {:start-at :do-the-sum
                            :states   {:do-the-sum {:type            :task
                                                    :resource        :sum
-                                                   :timeout-seconds 3
+                                                   :timeout-seconds 180
                                                    :end             true}}}
                           {:sum (fn [{:keys [a b]}] (+ a b))}
                           {:a 1

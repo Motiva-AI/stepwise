@@ -40,8 +40,8 @@
 
 (defn make-handler-interceptor [handler-fn]
   [:handler
-   {:before (fn [{:keys [task] :as context}]
-              (assoc context :task (handler-fn task)))}])
+   {:before (fn [env]
+              (assoc env :output (handler-fn (select-keys env [:context :input]))))}])
 
 (defn compile-interceptors [activity->handler]
   (into {}
@@ -49,7 +49,7 @@
                [activity
                 (if (fn? handler)
                   handler
-                  (interceptors/compile (conj (vec (:interceptors handler))
-                                              (make-handler-interceptor handler))))]))
+                  (interceptors/compile (into [(make-handler-interceptor (:handler-fn handler))]
+                                              (:interceptors handler))))]))
         activity->handler))
 

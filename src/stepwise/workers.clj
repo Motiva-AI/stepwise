@@ -20,7 +20,9 @@
 
 (defn handle [task handler-fn]
   (let [chan (async/chan)]
-    [chan (future (let [result (try (handler-fn (::mdl/input task))
+    [chan (future (let [result (try (handler-fn (::mdl/input task)
+                                                #(client/send-task-heartbeat
+                                                   (::mdl/task-token task)))
                                     (catch Throwable e e))]
                     (when-not (.isInterrupted (Thread/currentThread))
                       (if (instance? Throwable result)
