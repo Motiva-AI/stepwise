@@ -279,6 +279,9 @@
 (defmethod bd/->bean-val ::timeout-seconds [_ timeout-seconds]
   (int timeout-seconds))
 
+(defmethod bd/->bean-val ::heartbeat-seconds [_ heartbeat-seconds]
+  (int heartbeat-seconds))
+
 (def-builder-translation TaskState
                          #{::catchers ::comment ::heartbeat-seconds ::input-path ::output-path
                            ::resource ::result-path ::retriers ::timeout-seconds ::transition})
@@ -289,16 +292,7 @@
 (def-builder-translation WaitState
                          #{::comment ::input-path ::output-path ::transition ::wait-for})
 
-(declare map->ParallelState)
-
-(def state-kw->map->Bean
-  {::choice   map->ChoiceState
-   ::fail     map->FailState
-   ::parallel map->ParallelState
-   ::pass     map->PassState
-   ::succeed  map->SucceedState
-   ::task     map->TaskState
-   ::wait     map->WaitState})
+(declare state-kw->map->Bean)
 
 (defn states->bean-map [states]
   (into {}
@@ -330,6 +324,15 @@
 (def-builder-translation ParallelState
                          #{::branches ::catchers ::comment ::input-path ::output-path ::result-path
                            ::retriers ::transition})
+
+(def state-kw->map->Bean
+  {::choice   map->ChoiceState
+   ::fail     map->FailState
+   ::parallel map->ParallelState
+   ::pass     map->PassState
+   ::succeed  map->SucceedState
+   ::task     map->TaskState
+   ::wait     map->WaitState})
 
 (def bean-class->state-kw
   {ChoiceState   ::choice

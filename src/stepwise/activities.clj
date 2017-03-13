@@ -49,7 +49,9 @@
                [activity
                 (if (fn? handler)
                   handler
-                  (interceptors/compile (into [(make-handler-interceptor (:handler-fn handler))]
+                  (interceptors/compile (into (if (:handler-fn handler)
+                                                [(make-handler-interceptor (:handler-fn handler))]
+                                                [])
                                               (:interceptors handler))))]))
         activity->handler))
 

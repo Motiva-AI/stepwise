@@ -158,8 +158,7 @@
                              (try
                                (int (:seconds wait-for))
                                true
-                               (catch IllegalArgumentException _
-                                 false))
+                               (catch Throwable _ false))
                              (string? (:seconds-path wait-for))))
                        (constantly (gen/return {:seconds 10})))
            (s/keys :opt-un [::mdl/comment ::mdl/input-path ::mdl/output-path])

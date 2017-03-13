@@ -25,6 +25,7 @@
   (let [execution-arn (client/start-execution (arns/get-state-machine-arn env-name
                                                                           state-machine-name)
                                               opts)]
+    ; TODO occasionally not long enough for execution to even be visible yet
     (Thread/sleep 200)
     (loop [execution (client/describe-execution execution-arn)]
       (if (= (::mdl/status execution) "RUNNING")

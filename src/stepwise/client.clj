@@ -1,15 +1,21 @@
 (ns stepwise.client
   (:require [stepwise.model :as mdl])
   (:import (com.amazonaws.services.stepfunctions AWSStepFunctionsClient
-                                                 AWSStepFunctionsClientBuilder)))
+                                                 AWSStepFunctionsClientBuilder)
+           (com.amazonaws ClientConfigurationFactory ClientConfiguration)))
 
 (set! *warn-on-reflection* true)
 
 (def default-client
   (atom nil))
 
+(def client-config
+  (doto (ClientConfiguration.)
+    (.setSocketTimeout 70000)))
+
 (def stock-default-client
   (delay (-> (AWSStepFunctionsClientBuilder/standard)
+             (.withClientConfiguration client-config)
              (.build))))
 
 (defn set-default-client! [^AWSStepFunctionsClient client]
