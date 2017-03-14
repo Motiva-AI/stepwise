@@ -110,8 +110,7 @@
   (map->Transition transition))
 
 (defmethod bd/builder-override [Catcher ::error-equals] [_ ^Catcher$Builder builder error-equals]
-  (doseq [error error-equals]
-    (.errorEquals builder error)))
+  (.errorEquals builder (into-array String error-equals)))
 
 (def-builder-translation Catcher #{::error-equals ::result-path ::transition})
 
@@ -312,11 +311,11 @@
 
 (defmethod bd/builder-override [ParallelState ::catchers] [_ ^ParallelState$Builder builder catchers]
   (doseq [catcher catchers]
-    (.branch builder (map->Catcher catcher true))))
+    (.catcher builder (map->Catcher catcher true))))
 
 (defmethod bd/builder-override [ParallelState ::retriers] [_ ^ParallelState$Builder builder retriers]
   (doseq [retrier retriers]
-    (.branch builder (map->Retrier retrier true))))
+    (.retrier builder (map->Retrier retrier true))))
 
 (defmethod bd/builder-override [ParallelState ::transition] [_ ^ParallelState$Builder builder transition]
   (.transition builder (map->Transition transition)))

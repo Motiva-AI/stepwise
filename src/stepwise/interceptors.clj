@@ -36,7 +36,7 @@
          :output  nil
          :context {:send-heartbeat send-heartbeat}
          :stack   []
-         :queue   queue}
+         :queue   (into [] (reverse queue))}
         (invoke-interceptors :before)
         change-direction
         (invoke-interceptors :after)

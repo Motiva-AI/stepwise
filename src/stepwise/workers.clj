@@ -25,11 +25,15 @@
                                                    (::mdl/task-token task)))
                                     (catch Throwable e e))]
                     (when-not (.isInterrupted (Thread/currentThread))
-                      (if (instance? Throwable result)
-                        (client/send-task-failure (::mdl/task-token task)
-                                                  (exception->failure-map result))
-                        (client/send-task-success (::mdl/task-token task)
-                                                  result))))
+                      (try
+                        (if (instance? Throwable result)
+                          (client/send-task-failure (::mdl/task-token task)
+                                                    (exception->failure-map result))
+                          (client/send-task-success (::mdl/task-token task)
+                                                    result))
+                        (catch Throwable e
+                          ; TODO pluggable logging instead
+                          (prn e)))))
                   (async/>!! chan :done)
                   (async/close! chan))]))
 
@@ -49,7 +53,8 @@
            (= channel terminate-chan)
            :done
 
-           (instance? Throwable message)
+           (or (instance? Throwable message)
+               (empty? message))
            (recur (async/alts! [terminate-chan (poll activity-arn)])
                   nil
                   nil
@@ -67,7 +72,8 @@
            (= channel terminate-chan)
            (if (= message :kill)
              ; Activity handling must be interruptable for this to have an immediate effect. Even if
-             ; it continues, the task's completion won't be sent and it will eventually time out.
+             ; the handler continues, the task's completion won't be sent and it will eventually
+             ; time out.
              (do (future-cancel handler-future)
                  :done)
              (recur (async/alts! [terminate-chan handler-chan])
