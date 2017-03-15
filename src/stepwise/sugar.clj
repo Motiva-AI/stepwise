@@ -142,11 +142,13 @@
     {::key (keyword (name k))
      ::val v}))
 
-(defmethod desugar* ::default-state-name [_ state-name]
-  (ser/ser-keyword-name state-name))
+(defmethod desugar* ::default [_ state-name]
+  {::key ::mdl/default-state-name
+   ::val (ser/ser-keyword-name state-name)})
 
 (defmethod sugar* ::mdl/default-state-name [_ state-name]
-  (ser/deser-keyword-name state-name))
+  {::key :default
+   ::val (ser/deser-keyword-name state-name)})
 
 (defmethod desugar* ::error-equals [_ error-equals]
   (into #{}
