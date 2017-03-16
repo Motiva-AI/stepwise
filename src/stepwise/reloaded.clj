@@ -9,7 +9,10 @@
             [stepwise.sugar :as sgr]
             [stepwise.iam :as iam]
             [stepwise.workers :as workers])
-  (:import (com.amazonaws.services.stepfunctions.model StateMachineDeletingException StateMachineDoesNotExistException ExecutionDoesNotExistException)))
+  (:import (com.amazonaws.services.stepfunctions.model StateMachineDeletingException
+                                                       StateMachineDoesNotExistException
+                                                       ExecutionDoesNotExistException)
+           (java.util UUID)))
 
 ; Issues
 ; ------
@@ -100,7 +103,8 @@
           workers       (workers/boot (-> task-handlers
                                           (sets/rename-keys activity->arn)
                                           (activities/compile-interceptors)))
-          result        (core/run-execution env-name machine-name {:input input})]
+          result        (core/run-execution env-name machine-name {:input          input
+                                                                   :execution-name (str (UUID/randomUUID))})]
       (core/kill-workers workers)
       result)))
 

@@ -17,14 +17,18 @@
                                  definition
                                  (iam/ensure-execution-role))))
 
-(defn start-execution [ns state-machine-name & [{:keys [input name] :as opts}]]
-  (client/start-execution (arns/get-state-machine-arn ns state-machine-name)
-                          opts))
+(defn start-execution [env-name state-machine-name & [{:keys [input execution-name]}]]
+  (let [input (if execution-name
+                (assoc input :execution-arn (arns/get-execution-arn env-name
+                                                                    state-machine-name
+                                                                    execution-name))
+                input)]
+    (client/start-execution (arns/get-state-machine-arn env-name state-machine-name)
+                            {:input input
+                             :name  execution-name})))
 
-(defn run-execution [env-name state-machine-name & [{:keys [input name] :as opts}]]
-  (let [execution-arn (client/start-execution (arns/get-state-machine-arn env-name
-                                                                          state-machine-name)
-                                              opts)]
+(defn run-execution [env-name state-machine-name & [{:keys [input execution-name] :as opts}]]
+  (let [execution-arn (start-execution env-name state-machine-name opts)]
     ; TODO occasionally not long enough for execution to even be visible yet
     (Thread/sleep 200)
     (loop [execution (client/describe-execution execution-arn)]

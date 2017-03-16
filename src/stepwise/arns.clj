@@ -15,8 +15,18 @@
 (defn make-name [env-name name-kw]
   (str env-name "_" (ser/ser-keyword-name name-kw)))
 
-(defn get-state-machine-arn [env-name name]
+(defn get-arn-stem [env-name state-machine-name resource]
   (str "arn:aws:states:" @region
        ":" @account-number
-       ":stateMachine:" (make-name env-name name)))
+       ":" resource ":"
+       (make-name env-name state-machine-name)))
+
+(defn get-state-machine-arn [env-name state-machine-name]
+  (get-arn-stem env-name state-machine-name "stateMachine"))
+
+(defn get-execution-arn [env-name state-machine-name execution-name]
+  (str (get-arn-stem env-name
+                     state-machine-name
+                     "execution")
+       ":" execution-name))
 
