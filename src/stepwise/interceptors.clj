@@ -28,9 +28,27 @@
       (dissoc :queue)
       (assoc :queue (:stack context))))
 
+(defn well-formed-interceptor? [interceptor]
+  (let [stage-map (second interceptor)]
+    (and (vector? interceptor)
+         (= (count interceptor) 2)
+         (keyword? (first interceptor))
+         (map? stage-map)
+         (or (nil? (:before stage-map))
+             (fn? (:before stage-map)))
+         (or (nil? (:after stage-map))
+             (fn? (:after stage-map))))))
+
 (defn compile
   "Returns a fn that exercises a queue of interceptors against a task and returns a result"
   [queue]
+  (doseq [[index interceptor] (map vector
+                                   (range 0 (count queue))
+                                   queue)]
+    (when-not (well-formed-interceptor? interceptor)
+      (throw (ex-info "Malformed interceptor"
+                      {:index index
+                       :form  interceptor}))))
   (fn execute [input send-heartbeat]
     (-> {:input   input
          :output  nil

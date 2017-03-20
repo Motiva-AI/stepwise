@@ -4,6 +4,8 @@
             [stepwise.client :as client]
             [stepwise.serialization :as ser]))
 
+(def default-activity-concurrency 1)
+
 (defn poll [activity-arn]
   (let [chan (async/chan)]
     (future (async/>!! chan (try (client/get-activity-task activity-arn)
@@ -96,12 +98,23 @@
 
            :else :done))))))
 
-(defn boot [activity-arn->handler-fn]
+(defn boot-workers [terminate-mult activity-arn handler-fn concurrency]
+  (into #{}
+        (map (fn [_]
+               (boot-worker terminate-mult activity-arn handler-fn)))
+        (range 0 concurrency)))
+
+(defn boot [activity-arn->handler-fn & [activity-arn->concurrency]]
   (let [terminate-chan (async/chan)
         terminate-mult (async/mult terminate-chan)
         exited-chans   (into #{}
-                             (map (fn [[activity-arn handler-fn]]
-                                    (boot-worker terminate-mult activity-arn handler-fn)))
+                             (mapcat (fn [[activity-arn handler-fn]]
+                                       (boot-workers terminate-mult
+                                                     activity-arn
+                                                     handler-fn
+                                                     (get activity-arn->concurrency
+                                                          activity-arn
+                                                          default-activity-concurrency))))
                              activity-arn->handler-fn)
         exited-chan    (->> exited-chans
                             async/merge

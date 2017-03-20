@@ -2,7 +2,7 @@
   (:require [stepwise.model :as mdl])
   (:import (com.amazonaws.services.stepfunctions AWSStepFunctionsClient
                                                  AWSStepFunctionsClientBuilder)
-           (com.amazonaws ClientConfigurationFactory ClientConfiguration)))
+           (com.amazonaws ClientConfiguration)))
 
 (set! *warn-on-reflection* true)
 

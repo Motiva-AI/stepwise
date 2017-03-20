@@ -39,9 +39,10 @@
         execution))
     (client/get-execution-history execution-arn)))
 
-(defn start-workers [env-name task-handlers]
+(defn start-workers [env-name task-handlers & [{:keys [task-concurrency]}]]
   (let [activity-kw->arn (activities/ensure-all env-name (keys task-handlers))]
-    (workers/boot (sets/rename-keys task-handlers activity-kw->arn))))
+    (workers/boot (sets/rename-keys task-handlers activity-kw->arn)
+                  task-concurrency)))
 
 (defn shutdown-workers [workers]
   (async/>!! (:terminate-chan workers) :shutdown)

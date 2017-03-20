@@ -43,6 +43,8 @@
    {:before (fn [env]
               (assoc env :output (handler-fn (select-keys env [:context :input]))))}])
 
+(defn identity-handler-fn [{:keys [input]}] input)
+
 (defn compile-interceptors [activity->handler]
   (into {}
         (map (fn [[activity handler]]
@@ -50,7 +52,8 @@
                 (if (fn? handler)
                   handler
                   (interceptors/compile (into (vec (:interceptors handler))
-                                              (when-let [handler-fn (:handler-fn handler)]
-                                                [(make-handler-interceptor handler-fn)]))))]))
+                                              [(make-handler-interceptor (get handler
+                                                                              :handler-fn
+                                                                              identity-handler-fn))])))]))
         activity->handler))
 
