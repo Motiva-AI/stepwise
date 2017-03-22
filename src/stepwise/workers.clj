@@ -2,14 +2,22 @@
   (:require [clojure.core.async :as async]
             [stepwise.model :as mdl]
             [stepwise.client :as client]
-            [stepwise.serialization :as ser]))
+            [stepwise.serialization :as ser]
+            [clojure.string :as strs])
+  (:import (com.amazonaws SdkClientException)
+           (java.net SocketTimeoutException)))
 
 (def default-activity-concurrency 1)
 
 (defn poll [activity-arn]
   (let [chan (async/chan)]
     (future (async/>!! chan (try (client/get-activity-task activity-arn)
-                                 (catch Throwable e e)))
+                                 (catch Throwable e
+                                   (when-not (and (instance? SdkClientException e)
+                                                  (instance? SocketTimeoutException (.getCause e)))
+                                     ; TODO pluggable logging instead
+                                     (prn e))
+                                   e)))
             (async/close! chan))
     chan))
 
@@ -35,7 +43,10 @@
                                                     result))
                         (catch Throwable e
                           ; TODO pluggable logging instead
-                          (prn e)))))
+                          (prn (ex-info "Failed to send activity task result"
+                                        {:task   task
+                                         :result result}
+                                        e))))))
                   (async/>!! chan :done)
                   (async/close! chan))]))
 
