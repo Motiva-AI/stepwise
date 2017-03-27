@@ -27,21 +27,25 @@
                             {:input input
                              :name  execution-name})))
 
+(defn await-execution [execution-arn]
+  ; TODO occasionally not long enough for execution to even be visible yet
+  (Thread/sleep 200)
+  (loop [execution (client/describe-execution execution-arn)]
+    (if (= (::mdl/status execution) "RUNNING")
+      ; TODO should do a curve here to cover both short and longer running executions gracefully
+      (do (Thread/sleep 500)
+          (recur (client/describe-execution execution-arn)))
+      execution))
+  (client/get-execution-history execution-arn))
+
 (defn run-execution [env-name state-machine-name & [{:keys [input execution-name] :as opts}]]
-  (let [execution-arn (start-execution env-name state-machine-name opts)]
-    ; TODO occasionally not long enough for execution to even be visible yet
-    (Thread/sleep 200)
-    (loop [execution (client/describe-execution execution-arn)]
-      (if (= (::mdl/status execution) "RUNNING")
-        ; TODO should do a curve here to cover both short and longer running executions gracefully
-        (do (Thread/sleep 500)
-            (recur (client/describe-execution execution-arn)))
-        execution))
-    (client/get-execution-history execution-arn)))
+  (await-execution (start-execution env-name state-machine-name opts)))
 
 (defn start-workers [env-name task-handlers & [{:keys [task-concurrency]}]]
-  (let [activity-kw->arn (activities/ensure-all env-name (keys task-handlers))]
-    (workers/boot (sets/rename-keys task-handlers activity-kw->arn)
+  (let [activity->arn (activities/ensure-all env-name (keys task-handlers))]
+    (workers/boot (-> task-handlers
+                      (sets/rename-keys activity->arn)
+                      (activities/compile-interceptors))
                   task-concurrency)))
 
 (defn shutdown-workers [workers]
