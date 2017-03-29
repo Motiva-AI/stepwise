@@ -93,7 +93,7 @@
 
 (defmethod bd/builder-override [Retrier ::error-equals] [_ ^Retrier$Builder builder error-equals]
   (doseq [error error-equals]
-    (.errorEquals builder error)))
+    (.errorEquals builder (name error))))
 
 (def-builder-translation Retrier #{::backoff-rate ::error-equals ::interval-seconds ::max-attempts})
 
@@ -110,7 +110,7 @@
   (map->Transition transition))
 
 (defmethod bd/builder-override [Catcher ::error-equals] [_ ^Catcher$Builder builder error-equals]
-  (.errorEquals builder (into-array String error-equals)))
+  (.errorEquals builder (into-array String (map name error-equals))))
 
 (def-builder-translation Catcher #{::error-equals ::result-path ::transition})
 

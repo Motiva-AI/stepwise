@@ -4,29 +4,36 @@
             [stepwise.client :as client]
             [stepwise.serialization :as ser]
             [clojure.string :as strs])
-  (:import (com.amazonaws SdkClientException)
-           (java.net SocketTimeoutException)))
+  (:import (java.net SocketTimeoutException)))
 
 (def default-activity-concurrency 1)
+(def max-error-length 256)
+(def max-cause-length 32768)
 
 (defn poll [activity-arn]
   (let [chan (async/chan)]
     (future (async/>!! chan (try (client/get-activity-task activity-arn)
                                  (catch Throwable e
-                                   (when-not (and (instance? SdkClientException e)
-                                                  (instance? SocketTimeoutException (.getCause e)))
+                                   (when-not (instance? SocketTimeoutException (.getCause e))
                                      ; TODO pluggable logging instead
                                      (prn e))
                                    e)))
             (async/close! chan))
     chan))
 
+(defn truncate [string max-length]
+  (if (> (count string) max-length)
+    (subs string 0 max-length)
+    string))
+
 (defn exception->failure-map [^Throwable e]
-  {:error (if-let [error (:error (ex-data e))]
-            (ser/ser-error-val error)
-            (or (not-empty (.getMessage e))
-                "(See cause)"))
-   :cause (ser/ser-exception e)})
+  {:error (truncate (if-let [error (:error (ex-data e))]
+                      (ser/ser-error-val error)
+                      (or (not-empty (.getMessage e))
+                          "(See cause)"))
+                    max-error-length)
+   :cause (truncate (ser/ser-exception e)
+                    max-cause-length)})
 
 (defn handle [task handler-fn]
   (let [chan (async/chan)]
