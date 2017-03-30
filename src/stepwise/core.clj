@@ -28,8 +28,8 @@
                              :name  execution-name})))
 
 (defn await-execution [execution-arn]
-  ; TODO occasionally not long enough for execution to even be visible yet
-  (Thread/sleep 200)
+  ; TODO occasionally not long enough for execution to even be visible yet -- catch
+  (Thread/sleep 500)
   (loop [execution (client/describe-execution execution-arn)]
     (if (= (::mdl/status execution) "RUNNING")
       ; TODO should do a curve here to cover both short and longer running executions gracefully
