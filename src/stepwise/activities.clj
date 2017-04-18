@@ -45,15 +45,18 @@
 
 (defn identity-handler-fn [{:keys [input]}] input)
 
-(defn compile-interceptors [activity->handler]
+(defn compile [handler]
+  (interceptors/compile (into (vec (:interceptors handler))
+                              [(make-handler-interceptor (get handler
+                                                              :handler-fn
+                                                              identity-handler-fn))])))
+
+(defn compile-all [activity->handler]
   (into {}
         (map (fn [[activity handler]]
                [activity
                 (if (fn? handler)
                   handler
-                  (interceptors/compile (into (vec (:interceptors handler))
-                                              [(make-handler-interceptor (get handler
-                                                                              :handler-fn
-                                                                              identity-handler-fn))])))]))
+                  (compile handler))]))
         activity->handler))
 

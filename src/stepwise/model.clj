@@ -92,8 +92,7 @@
   ((wait-kw->map->Bean (-> wait-for first key)) wait-for true))
 
 (defmethod bd/builder-override [Retrier ::error-equals] [_ ^Retrier$Builder builder error-equals]
-  (doseq [error error-equals]
-    (.errorEquals builder (name error))))
+  (.errorEquals builder (into-array String (map name error-equals))))
 
 (def-builder-translation Retrier #{::backoff-rate ::error-equals ::interval-seconds ::max-attempts})
 

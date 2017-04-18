@@ -10,6 +10,9 @@
                                   (require 'spyscope.core)
                                   (pjstadig.humane-test-output/activate!)]
                    :main         stepwise.dev-repl}}
+  :repositories {"snapshots" {:url      "https://ncgl.jfrog.io/ncgl/libs-snapshot-local"
+                              :username :env/artifactory_user
+                              :password :env/artifactory_password}}
   :dependencies [[uwcpdx/bean-dip "0.6.0-SNAPSHOT"]
                  [org.clojure/data.json "0.2.6"]
                  [org.clojure/core.async "0.3.441"]

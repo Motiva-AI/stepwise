@@ -11,7 +11,9 @@
 
 (def client-config
   (doto (ClientConfiguration.)
-    (.setSocketTimeout 70000)))
+    (.setSocketTimeout 70000)
+    ; TODO this is an upper bound on activity task types -- make configurable
+    (.setMaxConnections 50)))
 
 (def stock-default-client
   (delay (-> (AWSStepFunctionsClientBuilder/standard)

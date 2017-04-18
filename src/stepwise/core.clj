@@ -19,9 +19,8 @@
 
 (defn start-execution [env-name state-machine-name & [{:keys [input execution-name]}]]
   (let [input (if execution-name
-                (assoc input :execution-arn (arns/get-execution-arn env-name
-                                                                    state-machine-name
-                                                                    execution-name))
+                (assoc input :state-machine-name state-machine-name
+                             :execution-name execution-name)
                 input)]
     (client/start-execution (arns/get-state-machine-arn env-name state-machine-name)
                             {:input input
@@ -42,10 +41,14 @@
   (await-execution (start-execution env-name state-machine-name opts)))
 
 (defn start-workers [env-name task-handlers & [{:keys [task-concurrency]}]]
-  (let [activity->arn (activities/ensure-all env-name (keys task-handlers))]
+  (let [activity->arn (into {}
+                            (map #(arns/get-activity-arn env-name %))
+                            (keys task-handlers))
+        ; was blowing up call quotas
+        #_(activities/ensure-all env-name (keys task-handlers))]
     (workers/boot (-> task-handlers
                       (sets/rename-keys activity->arn)
-                      (activities/compile-interceptors))
+                      (activities/compile-all))
                   task-concurrency)))
 
 (defn shutdown-workers [workers]

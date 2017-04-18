@@ -28,7 +28,7 @@
 ; + new activity name: last one plus one -> cycles/min then reset
 
 (def max-cycles-per-minute 120)
-(def version-delimiter "--")
+(def version-delimiter "_SNAPSHOT")
 (def version-delimiter-re (re-pattern version-delimiter))
 
 (defn get-next-version [current-arns]
@@ -102,7 +102,7 @@
                                                      (iam/ensure-execution-role))
           workers       (workers/boot (-> task-handlers
                                           (sets/rename-keys activity->arn)
-                                          (activities/compile-interceptors)))
+                                          (activities/compile-all)))
           result        (core/run-execution env-name machine-name {:input          input
                                                                    :execution-name (str (UUID/randomUUID))})]
       (core/kill-workers workers)
