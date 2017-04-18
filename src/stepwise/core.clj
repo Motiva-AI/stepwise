@@ -42,7 +42,8 @@
 
 (defn start-workers [env-name task-handlers & [{:keys [task-concurrency]}]]
   (let [activity->arn (into {}
-                            (map #(arns/get-activity-arn env-name %))
+                            (map (fn [activity-name]
+                                   [activity-name (arns/get-activity-arn env-name activity-name)]))
                             (keys task-handlers))
         ; was blowing up call quotas
         #_(activities/ensure-all env-name (keys task-handlers))]
