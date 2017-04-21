@@ -24,9 +24,6 @@
 (defn get-state-machine-arn [env-name state-machine-name]
   (get-arn-stem env-name state-machine-name "stateMachine"))
 
-(defn get-state-machine-arn [env-name state-machine-name]
-  (get-arn-stem env-name state-machine-name "stateMachine"))
-
 (defn get-execution-arn [env-name state-machine-name execution-name]
   (str (get-arn-stem env-name
                      state-machine-name

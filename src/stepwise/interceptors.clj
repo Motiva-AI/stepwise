@@ -7,7 +7,7 @@
   ; TODO clean up names
   [context [_ interceptor] direction]
   (if-let [f (get interceptor direction)]
-    (do (f context))
+    (f context)
     context))
 
 (defn- invoke-interceptors
@@ -53,8 +53,8 @@
     (-> {:input   input
          :output  nil
          :context {:send-heartbeat send-heartbeat}
-         :stack   []
-         :queue   (into [] (reverse queue))}
+         :stack   ()
+         :queue   (into () (reverse queue))}
         (invoke-interceptors :before)
         change-direction
         (invoke-interceptors :after)
