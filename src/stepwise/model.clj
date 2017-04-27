@@ -94,6 +94,15 @@
 (defmethod bd/builder-override [Retrier ::error-equals] [_ ^Retrier$Builder builder error-equals]
   (.errorEquals builder (into-array String (map name error-equals))))
 
+(defmethod bd/->bean-val ::backoff-rate [_ backoff-rate]
+  (double backoff-rate))
+
+(defmethod bd/->bean-val ::interval-seconds [_ interval-seconds]
+  (int interval-seconds))
+
+(defmethod bd/->bean-val ::max-attempts [_ max-attempts]
+  (int max-attempts))
+
 (def-builder-translation Retrier #{::backoff-rate ::error-equals ::interval-seconds ::max-attempts})
 
 (def-builder-translation NextStateTransition #{::next-state-name ::terminal?} ::terminal?)
