@@ -32,8 +32,10 @@
                       (or (not-empty (.getMessage e))
                           "(See cause)"))
                     max-error-length)
-   :cause (truncate (ser/ser-exception e)
-                    max-cause-length)})
+   :cause (if (get (ex-data e) :include-cause? true)
+            (truncate (ser/ser-exception e)
+                      max-cause-length)
+            "")})
 
 (defn handle [task handler-fn]
   (let [chan (async/chan)]
