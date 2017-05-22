@@ -77,6 +77,8 @@
 
            (or (instance? Throwable message)
                (empty? message))
+           ; TODO exponential backoff
+           ; TODO fatal error on "ActivityDoesNotExist" error code
            (recur (async/alts! [terminate-chan (poll activity-arn)])
                   nil
                   nil

@@ -60,3 +60,11 @@
                   (compile handler))]))
         activity->handler))
 
+(defn invoke [activity->handler activity-name input]
+  (let [compiled (compile-all activity->handler)]
+    (if (contains? compiled activity-name)
+      ((get compiled activity-name) input (fn []))
+      (throw (ex-info "Activity name missing in handler map"
+                      {:activity-name activity-name
+                       :handled-keys  (set (keys activity->handler))})))))
+

@@ -47,7 +47,8 @@
   (str "%0" (count (str max-cycles-per-minute)) "d"))
 
 (defn deversion-name [nm]
-  (first (strs/split nm version-delimiter-re)))
+  (first (strs/split (name nm)
+                     version-delimiter-re)))
 
 (defn version-name [version nm]
   (keyword (namespace nm)
@@ -68,12 +69,15 @@
   (doseq [arn arns]
     (client/delete-activity arn)))
 
+(defn get-family-arns [env-name machine-name]
+  (into #{}
+        (comp (filter #(= (deversion-name (::mdl/name %))
+                          (arns/make-name env-name machine-name)))
+              (map ::mdl/arn))
+        (::mdl/state-machines (client/list-state-machines))))
+
 (defn run-execution [env-name machine-name definition task-handlers input]
-  (let [machine-arns     (into #{}
-                               (comp (filter #(= (deversion-name (::mdl/name %))
-                                                 (arns/make-name env-name machine-name)))
-                                     (map ::mdl/arn))
-                               (::mdl/state-machines (client/list-state-machines)))
+  (let [machine-arns     (get-family-arns env-name machine-name)
         version          (get-next-version machine-arns)
         machine-name     (version-name version machine-name)
         activity-names   (activities/get-names definition)

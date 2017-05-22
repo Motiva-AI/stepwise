@@ -1,9 +1,10 @@
 (ns stepwise.iam
   (:require [bean-dip.core :as bd])
-  (:import (com.amazonaws.services.identitymanagement AmazonIdentityManagementClientBuilder AmazonIdentityManagement)
+  (:import (com.amazonaws.services.identitymanagement AmazonIdentityManagementClientBuilder)
            (com.amazonaws.services.identitymanagement.model CreateRoleRequest
                                                             PutRolePolicyRequest
-                                                            GetRoleRequest NoSuchEntityException GetRolePolicyRequest)
+                                                            GetRoleRequest
+                                                            GetRolePolicyRequest)
            (com.amazonaws.regions DefaultAwsRegionProviderChain)))
 
 (set! *warn-on-reflection* true)
