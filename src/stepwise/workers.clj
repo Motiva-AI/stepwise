@@ -15,7 +15,7 @@
     (future (async/>!! chan (try (client/get-activity-task activity-arn)
                                  (catch Throwable e
                                    (when-not (instance? SocketTimeoutException (.getCause e))
-                                     ; TODO pluggable logging instead
+                                     ; TODO PREREL pluggable logging instead
                                      (prn e))
                                    e)))
             (async/close! chan))
@@ -46,12 +46,13 @@
                     (when-not (.isInterrupted (Thread/currentThread))
                       (try
                         (if (instance? Throwable result)
+                          ; TODO PREREL also log
                           (client/send-task-failure (::mdl/task-token task)
                                                     (exception->failure-map result))
                           (client/send-task-success (::mdl/task-token task)
                                                     result))
                         (catch Throwable e
-                          ; TODO pluggable logging instead
+                          ; TODO PREREL pluggable logging instead
                           (prn (ex-info "Failed to send activity task result"
                                         {:task   task
                                          :result result}
@@ -77,8 +78,8 @@
 
            (or (instance? Throwable message)
                (empty? message))
-           ; TODO exponential backoff
-           ; TODO fatal error on "ActivityDoesNotExist" error code
+           ; TODO PREREL exponential backoff
+           ; TODO PREREL fatal error on "ActivityDoesNotExist" error code
            (recur (async/alts! [terminate-chan (poll activity-arn)])
                   nil
                   nil

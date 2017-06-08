@@ -40,7 +40,7 @@
         (.getPolicyDocument client (map->GetRolePolicyRequest {::role-name   role-name
                                                                ::policy-name policy-name})))))
 
-; TODO return via ensure above
+; TODO PREREL return via ensure above
 (defn ensure-execution-role []
   "arn:aws:iam::256212633204:role/service-role/StatesExecutionRole-us-west-2")
 

@@ -89,7 +89,7 @@
                                      (map ::mdl/arn))
                                (::mdl/activities (client/list-activities)))]
 
-    ; TODO use prior version of state machine to purge removed activities
+    ; TODO PREREL use prior version of state machine to purge removed activities
 
     (purge-machines machine-arns)
     (purge-activities activity-arns)

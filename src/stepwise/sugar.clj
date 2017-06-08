@@ -236,7 +236,7 @@
         (map (comp keyword name))
         pass-through-model-keys))
 
-; TODO throw on unrecognized key to help prevent typos
+; TODO PREREL throw on unrecognized key to help prevent typos
 (defn desugar [state-machine]
   (walk/prewalk (comp (translate-keys desugar* (name 'stepwise.model))
                       (renamespace-keys bare-pass-through-keys (name 'stepwise.model))
