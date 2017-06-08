@@ -28,7 +28,25 @@
                                                        ExecutionFailedEventDetails
                                                        ExecutionStartedEventDetails
                                                        ExecutionSucceededEventDetails
-                                                       ExecutionAbortedEventDetails ExecutionTimedOutEventDetails StateEnteredEventDetails StateExitedEventDetails ListActivitiesRequest ListActivitiesResult ActivityListItem ListExecutionsRequest ListExecutionsResult ExecutionListItem ListStateMachinesRequest ListStateMachinesResult StateMachineListItem SendTaskFailureRequest SendTaskFailureResult SendTaskHeartbeatRequest StartExecutionRequest StopExecutionRequest StartExecutionResult SendTaskSuccessRequest)
+                                                       ExecutionAbortedEventDetails
+                                                       ExecutionTimedOutEventDetails
+                                                       StateEnteredEventDetails
+                                                       StateExitedEventDetails
+                                                       ListActivitiesRequest
+                                                       ListActivitiesResult
+                                                       ActivityListItem
+                                                       ListExecutionsRequest
+                                                       ListExecutionsResult
+                                                       ExecutionListItem
+                                                       ListStateMachinesRequest
+                                                       ListStateMachinesResult
+                                                       StateMachineListItem
+                                                       SendTaskFailureRequest
+                                                       SendTaskHeartbeatRequest
+                                                       StartExecutionRequest
+                                                       StopExecutionRequest
+                                                       StartExecutionResult
+                                                       SendTaskSuccessRequest)
            (com.amazonaws.services.stepfunctions.builder StateMachine StateMachine$Builder)
            (com.amazonaws.services.stepfunctions.builder.states ChoiceState FailState ParallelState
                                                                 PassState SucceedState TaskState
@@ -36,13 +54,25 @@
                                                                 NextStateTransition Branch Catcher
                                                                 Retrier WaitForSeconds
                                                                 WaitForTimestampPath
-                                                                WaitForSecondsPath WaitForTimestamp
-                                                                Branch$Builder ParallelState$Builder
+                                                                WaitForSecondsPath
+                                                                WaitForTimestamp$Builder
+                                                                Branch$Builder
+                                                                ParallelState$Builder
                                                                 Transition$Builder
                                                                 TaskState$Builder
                                                                 Catcher$Builder Retrier$Builder
                                                                 ChoiceState$Builder
-                                                                PassState$Builder WaitState$Builder)
+                                                                PassState$Builder
+                                                                WaitState$Builder
+                                                                WaitForTimestamp
+                                                                WaitForSecondsPath$Builder
+                                                                WaitForTimestampPath$Builder
+                                                                WaitForSeconds$Builder
+                                                                NextStateTransition$Builder
+                                                                EndTransition$Builder
+                                                                Choice$Builder
+                                                                FailState$Builder
+                                                                SucceedState$Builder)
            (com.amazonaws.services.stepfunctions.builder.conditions AndCondition
                                                                     BooleanEqualsCondition
                                                                     NotCondition
@@ -63,19 +93,36 @@
                                                                     TimestampGreaterThanOrEqualCondition
                                                                     TimestampGreaterThanCondition
                                                                     AndCondition$Builder
-                                                                    OrCondition$Builder)
+                                                                    OrCondition$Builder
+                                                                    TimestampLessThanOrEqualCondition$Builder
+                                                                    TimestampLessThanCondition$Builder
+                                                                    TimestampGreaterThanOrEqualCondition$Builder
+                                                                    TimestampGreaterThanCondition$Builder
+                                                                    TimestampEqualsCondition$Builder
+                                                                    StringLessThanOrEqualCondition$Builder
+                                                                    StringLessThanCondition$Builder
+                                                                    StringGreaterThanOrEqualCondition$Builder
+                                                                    StringGreaterThanCondition$Builder
+                                                                    StringEqualsCondition$Builder
+                                                                    NumericLessThanOrEqualCondition$Builder
+                                                                    NumericLessThanCondition$Builder
+                                                                    NumericGreaterThanOrEqualCondition$Builder
+                                                                    NumericGreaterThanCondition$Builder
+                                                                    NumericEqualsCondition$Builder
+                                                                    BooleanEqualsCondition$Builder
+                                                                    NotCondition$Builder)
            (java.util Date)))
 
 (set! *warn-on-reflection* true)
 
-(defn builder-form [bean-class-sym]
-  (list (symbol (str bean-class-sym) "builder")))
-
-(defmacro def-builder-translation [bean-class-sym field-specs & exclude-fields]
-  `(bd/def-builder-translation ~bean-class-sym
-                               ~field-specs
-                               ~(builder-form bean-class-sym)
-                               ~@exclude-fields))
+(defmacro def-builder-translation [bean-class-sym field-specs & get-only-fields]
+  (let [builder-form      (list (symbol (str bean-class-sym) "builder"))
+        builder-class-sym (symbol (str bean-class-sym "$Builder"))]
+    `(bd/def-builder-translation ~bean-class-sym
+                                 ~builder-class-sym
+                                 ~field-specs
+                                 {:builder-form    ~builder-form
+                                  :get-only-fields ~get-only-fields})))
 
 (def-builder-translation WaitForTimestamp #{::timestamp})
 (def-builder-translation WaitForSecondsPath #{::seconds-path})

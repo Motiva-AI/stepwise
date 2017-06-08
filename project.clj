@@ -13,7 +13,7 @@
   :repositories {"snapshots" {:url      "https://ncgl.jfrog.io/ncgl/libs-snapshot-local"
                               :username :env/artifactory_user
                               :password :env/artifactory_password}}
-  :dependencies [[uwcpdx/bean-dip "0.6.0-SNAPSHOT"]
+  :dependencies [[uwcpdx/bean-dip "0.7.1"]
                  [org.clojure/data.json "0.2.6"]
                  [org.clojure/core.async "0.3.441"]
                  [com.amazonaws/aws-java-sdk-iam "1.11.86"]

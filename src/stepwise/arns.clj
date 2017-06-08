@@ -1,5 +1,7 @@
 (ns stepwise.arns
-  (:require [stepwise.serialization :as ser])
+  (:require [stepwise.serialization :as ser]
+            [stepwise.client :as client]
+            [clojure.string :as strs])
   (:import (com.amazonaws.regions DefaultAwsRegionProviderChain)
            (com.amazonaws.services.securitytoken AWSSecurityTokenServiceClientBuilder)
            (com.amazonaws.services.securitytoken.model GetCallerIdentityRequest)))

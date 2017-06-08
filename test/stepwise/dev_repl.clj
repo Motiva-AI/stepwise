@@ -1,7 +1,6 @@
 (ns stepwise.dev-repl
   (:require [stepwise.model :as mdl]
             [stepwise.sugar :as sgr]
-            [ncgl.db.seed :as seed]
             [stepwise.reloaded :as reloaded]
             [stepwise.core :as core]
             [clojure.spec.gen :as sgen]
