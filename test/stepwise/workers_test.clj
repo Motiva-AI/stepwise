@@ -26,7 +26,7 @@
     (let [got-task (promise)
           {:keys [term-chan exited-chan]} (boot #(deliver got-task %))]
       (test/is (= :input
-                  (deref got-task 10 :timeout)))
+                  (deref got-task 100 :timeout)))
       (test/is (= term-chan
                   (second (async/alts!! [[term-chan :shutdown]
                                          (async/timeout 10)]))))

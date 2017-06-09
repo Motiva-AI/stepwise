@@ -3,12 +3,11 @@
             [stepwise.interceptors :as main]))
 
 (def hello-world
-  {:id     :hello-world
-   :before (fn [context]
-             (assoc context :result :hello-world))})
+  [:hello-world {:before (fn [context]
+                           (assoc context :output :hello-world))}])
 
 (defn execute [queue task]
-  ((main/compile queue) task))
+  ((main/compile queue) task (fn [])))
 
 (test/deftest compile
   (test/is (= :hello-world

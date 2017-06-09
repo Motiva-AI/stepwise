@@ -3,7 +3,7 @@
             [clojure.spec :as s]
             [clojure.spec.gen :as gen]))
 
-
+; TODO PREREL try to validate with jsonpath lib?
 (s/def ::json-path (s/and string? not-empty))
 (s/def ::mdl/reference-path ::json-path)
 (s/def ::mdl/input-path ::json-path)
@@ -20,6 +20,6 @@
 (s/def ::mdl/comment string?)
 (s/def ::mdl/cause string?)
 
-; TODO needs to be a valid arn
+; TODO PREREL does AWS SDK validate these as ARNs?
 (s/def ::mdl/resource string?)
 
