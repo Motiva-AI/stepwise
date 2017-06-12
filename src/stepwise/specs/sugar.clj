@@ -88,7 +88,7 @@
                       (s/get-spec ::sgr/transition))
              :gen-max 3))
 
-(s/def ::sgr/default-state-name ::sgr/state-name)
+(s/def ::sgr/default ::sgr/state-name)
 
 (defn type= [type-name]
   (let [unqual-name (-> type-name name keyword)]
@@ -98,7 +98,7 @@
 ; TODO file bug w/ AWS -- default state name supposed to be optional but their validation fails w/o
 (s/def ::sgr/choice-state
   (s/merge (type= :choice)
-           (s/keys :req-un [::sgr/choices ::sgr/default-state-name]
+           (s/keys :req-un [::sgr/choices ::sgr/default]
                    :opt-un [::mdl/comment ::mdl/input-path ::mdl/output-path])))
 
 (s/def ::sgr/branches

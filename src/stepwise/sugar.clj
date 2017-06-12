@@ -162,6 +162,12 @@
     (ser/deser-keyword-name (first error-equals))
     (into #{} (map ser/deser-keyword-name) error-equals)))
 
+(defmethod desugar* ::error [_ error]
+  (ser/ser-keyword-name error))
+
+(defmethod sugar* ::mdl/error [_ error]
+  (ser/deser-keyword-name error))
+
 (defmethod desugar* ::start-at [_ start-at]
   (ser/ser-keyword-name start-at))
 
@@ -229,21 +235,60 @@
     ::mdl/catchers
     ::mdl/choices
     ::mdl/states
-    ::mdl/resource})
+    ::mdl/resource
+    ::mdl/cause})
 
 (def bare-pass-through-keys
   (into #{}
         (map (comp keyword name))
         pass-through-model-keys))
 
-; TODO PREREL throw on unrecognized key to help prevent typos
+; from: https://stackoverflow.com/questions/40557159/clojure-pre-post-walk-with-path-from-root
+(defn pathwalk [f path e]
+  (let [e' (f path e)]
+    (cond
+      (map? e') (->> e'
+                     (map (fn [[k x]] [k (pathwalk f (conj path k) x)]))
+                     (into (empty e')))
+      (coll? e') (->> e'
+                      (map-indexed (fn [i x] (pathwalk f (conj path i) x)))
+                      (into (empty e')))
+      :else e')))
+
+(defn get-non-model-keys [state-machine]
+  (into #{}
+        (comp (map first)
+              (remove empty?)
+              (remove (fn [path]
+                        (= (-> path pop last)
+                           ::mdl/states)))
+              (remove (fn [path]
+                        (let [last-node (last path)]
+                          (or (int? last-node)
+                              (= (namespace last-node) "stepwise.model"))))))
+        (tree-seq (fn [[_ value]]
+                    (coll? value))
+                  (fn [[path value]]
+                    (into []
+                          (map (fn [[k v]]
+                                 [(conj path k) v]))
+                          (if (map? value)
+                            value
+                            (map-indexed vector value))))
+                  [[] state-machine])))
+
 (defn desugar [state-machine]
-  (walk/prewalk (comp (translate-keys desugar* (name 'stepwise.model))
-                      (renamespace-keys bare-pass-through-keys (name 'stepwise.model))
-                      (renamespace-keys bare-sugar-keys (name 'stepwise.sugar))
-                      ; desugar state name keys first to avoid collisions
-                      (transform-state-name-keys ser/ser-keyword-name))
-                state-machine))
+  (let [desugared   (walk/prewalk (comp (translate-keys desugar* (name 'stepwise.model))
+                                        (renamespace-keys bare-pass-through-keys (name 'stepwise.model))
+                                        (renamespace-keys bare-sugar-keys (name 'stepwise.sugar))
+                                        ; desugar state name keys first to avoid collisions
+                                        (transform-state-name-keys ser/ser-keyword-name))
+                                  state-machine)
+        errant-keys (get-non-model-keys desugared)]
+    (if (not-empty errant-keys)
+      (throw (ex-info (str "Unrecognized keys in state machine definition: " errant-keys)
+                      {:key-paths errant-keys})))
+    desugared))
 
 (defn sugar [state-machine]
   (walk/prewalk

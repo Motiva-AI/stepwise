@@ -107,15 +107,18 @@
   ;                                             :timeout-seconds 3
   ;                                             :end             true}}})
 
-  (reloaded/run-execution "ncgl-dev-dacc"
-                          :test-machine-v2
-                          {:start-at :do-the-sum
-                           :states   {:do-the-sum {:type            :task
-                                                   :resource        :sum
-                                                   :timeout-seconds 180
-                                                   :end             true}}}
-                          {:sum (fn [{:keys [a b]}] (+ a b))}
-                          {:a 1
-                           :b 2})
+  #_(reloaded/run-execution "ncgl-dev-dacc"
+                            :test-machine-v2
+                            {:start-at :do-the-sum
+                             :states   {:do-the-sum {:type            :task
+                                                     :resource        :sum
+                                                     :timeout-seconds 180
+                                                     :end             true}}}
+                            {:sum (fn [{:keys [a b]}] (+ a b))}
+                            {:a 1
+                             :b 2})
+  (sgr/get-non-model-keys {:foo [{:bar :bam}]
+                           :bim {:boom :bap
+                                 ::mdl/resource "hi"}})
   )
 

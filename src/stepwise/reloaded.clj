@@ -89,8 +89,6 @@
                                      (map ::mdl/arn))
                                (::mdl/activities (client/list-activities)))]
 
-    ; TODO PREREL use prior version of state machine to purge removed activities
-
     (purge-machines machine-arns)
     (purge-activities activity-arns)
 
@@ -111,4 +109,6 @@
                                                                    :execution-name (str (UUID/randomUUID))})]
       (core/kill-workers workers)
       result)))
+
+; TODO clean-up function to purge all snapshot machines/activities for an env/machine name pair
 

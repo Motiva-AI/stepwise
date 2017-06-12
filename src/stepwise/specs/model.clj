@@ -23,10 +23,18 @@
   (re-find #"^arn:[a-z0-9-]+:states:[a-z0-9-]+:[0-9]+:activity:[^:]{1,80}$"
            arn))
 
+(def dummy-activity-arn
+  "arn:aws:states:us-west-2:000000000000:activity:gogogo")
+
 (defn function-arn? [arn]
   (re-find #"^arn:[a-z0-9-]+:lambda:[a-z0-9-]+:[0-9]+:function:([a-zA-Z0-9-_]+)(:(\$LATEST|[a-zA-Z0-9-_]+))?$"
            arn))
 
-(s/def ::mdl/resource (s/or :activity-arn activity-arn?
-                            :function-arn function-arn?))
+(def dummy-function-arn
+  "arn:aws:lambda:us-west-2:000000000000:function:gogogo")
+
+(s/def ::mdl/resource (s/or :activity-arn (s/with-gen activity-arn?
+                                                      (constantly (gen/return dummy-activity-arn)))
+                            :function-arn (s/with-gen function-arn?
+                                                      (constantly (gen/return dummy-function-arn)))))
 
