@@ -35,3 +35,6 @@
 (defn get-activity-arn [env-name activity-name]
   (get-arn-stem env-name activity-name "activity"))
 
+(defn get-role-arn [path role-name]
+  (str "arn:aws:iam::" @account-number ":role" path role-name))
+
