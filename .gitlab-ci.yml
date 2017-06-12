@@ -1,0 +1,6 @@
+image: spieden/lein-project:2.6.0-1
+build:
+  script:
+    - lein test
+    - lein deploy
+
