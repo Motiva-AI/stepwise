@@ -3,7 +3,6 @@
             [clojure.spec :as s]
             [clojure.spec.gen :as gen]))
 
-; TODO PREREL try to validate with jsonpath lib?
 (s/def ::json-path (s/and string? not-empty))
 (s/def ::mdl/reference-path ::json-path)
 (s/def ::mdl/input-path ::json-path)
@@ -20,6 +19,14 @@
 (s/def ::mdl/comment string?)
 (s/def ::mdl/cause string?)
 
-; TODO PREREL does AWS SDK validate these as ARNs?
-(s/def ::mdl/resource string?)
+(defn activity-arn? [arn]
+  (re-find #"^arn:[a-z0-9-]+:states:[a-z0-9-]+:[0-9]+:activity:[^:]{1,80}$"
+           arn))
+
+(defn function-arn? [arn]
+  (re-find #"^arn:[a-z0-9-]+:lambda:[a-z0-9-]+:[0-9]+:function:([a-zA-Z0-9-_]+)(:(\$LATEST|[a-zA-Z0-9-_]+))?$"
+           arn))
+
+(s/def ::mdl/resource (s/or :activity-arn activity-arn?
+                            :function-arn function-arn?))
 

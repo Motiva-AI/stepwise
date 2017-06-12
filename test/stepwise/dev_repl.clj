@@ -34,6 +34,10 @@
                                                   :result-path "$.task"}
                               }}})
 
+(defn validate-sm [sm]
+  (-> (sgr/desugar sm)
+      (mdl/map->StateMachine)))
+
 (defn sandbox []
   #_(s/explain-data ::sgr/state-machine
                     {:start-at :my-choice

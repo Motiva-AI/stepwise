@@ -130,13 +130,13 @@
 (def-builder-translation WaitForSeconds #{::seconds})
 
 (def wait-kw->map->Bean
-  {::timestamp      map->WaitForTimestamp
-   ::seconds-path   map->WaitForSecondsPath
-   ::timestamp-path map->WaitForTimestampPath
-   ::seconds        map->WaitForSeconds})
+  {::timestamp      map->WaitForTimestamp$Builder
+   ::seconds-path   map->WaitForSecondsPath$Builder
+   ::timestamp-path map->WaitForTimestampPath$Builder
+   ::seconds        map->WaitForSeconds$Builder})
 
 (defmethod bd/->bean-val ::wait-for [_ wait-for]
-  ((wait-kw->map->Bean (-> wait-for first key)) wait-for true))
+  ((wait-kw->map->Bean (-> wait-for first key)) wait-for))
 
 (defmethod bd/builder-override [Retrier ::error-equals] [_ ^Retrier$Builder builder error-equals]
   (.errorEquals builder (into-array String (map name error-equals))))
@@ -158,8 +158,8 @@
 
 (defn map->Transition ^Transition$Builder [transition]
   (if (= transition ::end)
-    (map->EndTransition {} true)
-    (map->NextStateTransition {::next-state-name transition} true)))
+    (map->EndTransition$Builder {})
+    (map->NextStateTransition$Builder {::next-state-name transition})))
 
 (defmethod bd/->bean-val ::transition [_ transition]
   (map->Transition transition))
@@ -228,25 +228,25 @@
 (def-builder-translation NotCondition #{::condition})
 
 (def condition-kw->map->Bean
-  {::and         map->AndCondition
-   ::or          map->OrCondition
-   ::not         map->NotCondition
-   ::bool-eq     map->BooleanEqualsCondition
-   ::numeric-eq  map->NumericEqualsCondition
-   ::numeric-gt  map->NumericGreaterThanCondition
-   ::numeric-gte map->NumericGreaterThanOrEqualCondition
-   ::numeric-lt  map->NumericLessThanCondition
-   ::numeric-lte map->NumericLessThanOrEqualCondition
-   ::str-eq      map->StringEqualsCondition
-   ::str-gt      map->StringGreaterThanCondition
-   ::str-gte     map->StringGreaterThanOrEqualCondition
-   ::str-lt      map->StringLessThanCondition
-   ::str-lte     map->StringLessThanOrEqualCondition
-   ::ts-eq       map->TimestampEqualsCondition
-   ::ts-gt       map->TimestampGreaterThanCondition
-   ::ts-gte      map->TimestampGreaterThanOrEqualCondition
-   ::ts-lt       map->TimestampLessThanCondition
-   ::ts-lte      map->TimestampLessThanOrEqualCondition})
+  {::and         map->AndCondition$Builder
+   ::or          map->OrCondition$Builder
+   ::not         map->NotCondition$Builder
+   ::bool-eq     map->BooleanEqualsCondition$Builder
+   ::numeric-eq  map->NumericEqualsCondition$Builder
+   ::numeric-gt  map->NumericGreaterThanCondition$Builder
+   ::numeric-gte map->NumericGreaterThanOrEqualCondition$Builder
+   ::numeric-lt  map->NumericLessThanCondition$Builder
+   ::numeric-lte map->NumericLessThanOrEqualCondition$Builder
+   ::str-eq      map->StringEqualsCondition$Builder
+   ::str-gt      map->StringGreaterThanCondition$Builder
+   ::str-gte     map->StringGreaterThanOrEqualCondition$Builder
+   ::str-lt      map->StringLessThanCondition$Builder
+   ::str-lte     map->StringLessThanOrEqualCondition$Builder
+   ::ts-eq       map->TimestampEqualsCondition$Builder
+   ::ts-gt       map->TimestampGreaterThanCondition$Builder
+   ::ts-gte      map->TimestampGreaterThanOrEqualCondition$Builder
+   ::ts-lt       map->TimestampLessThanCondition$Builder
+   ::ts-lte      map->TimestampLessThanOrEqualCondition$Builder})
 
 (def non-compound?
   (-> (keys condition-kw->map->Bean)
@@ -256,9 +256,9 @@
 (defn tuple->Condition [[condition & attrs-or-children]]
   (let [map->Bean (condition-kw->map->Bean condition)]
     (condp contains? condition
-      #{::and ::or} (map->Bean {::conditions attrs-or-children} true)
-      #{::not} (map->Bean {::condition (first attrs-or-children)} true)
-      non-compound? (map->Bean (first attrs-or-children) true))))
+      #{::and ::or} (map->Bean {::conditions attrs-or-children})
+      #{::not} (map->Bean {::condition (first attrs-or-children)})
+      non-compound? (map->Bean (first attrs-or-children)))))
 
 (defmethod bd/->bean-val ::condition [_ condition]
   (tuple->Condition condition))
@@ -298,7 +298,7 @@
 
 (defmethod bd/builder-override [ChoiceState ::choices] [_ ^ChoiceState$Builder builder choices]
   (doseq [choice choices]
-    (.choice builder (map->Choice choice true))))
+    (.choice builder (map->Choice$Builder choice))))
 
 (def-builder-translation ChoiceState
                          #{::choices ::comment ::default-state-name ::input-path ::output-path
@@ -324,11 +324,11 @@
 
 (defmethod bd/builder-override [TaskState ::catchers] [_ ^TaskState$Builder builder catchers]
   (doseq [catcher catchers]
-    (.catcher builder (map->Catcher catcher true))))
+    (.catcher builder (map->Catcher$Builder catcher))))
 
 (defmethod bd/builder-override [TaskState ::retriers] [_ ^TaskState$Builder builder retriers]
   (doseq [retrier retriers]
-    (.retrier builder (map->Retrier retrier true))))
+    (.retrier builder (map->Retrier$Builder retrier))))
 
 (defmethod bd/->bean-val ::timeout-seconds [_ timeout-seconds]
   (int timeout-seconds))
@@ -351,7 +351,7 @@
 (defn states->bean-map [states]
   (into {}
         (map (fn [[name {:keys [::state-type] :as attrs}]]
-               [name ((state-kw->map->Bean state-type) attrs true)]))
+               [name ((state-kw->map->Bean state-type) attrs)]))
         states))
 
 (defmethod bd/builder-override [Branch ::states] [_ ^Branch$Builder builder states]
@@ -362,15 +362,15 @@
 
 (defmethod bd/builder-override [ParallelState ::branches] [_ ^ParallelState$Builder builder branches]
   (doseq [branch branches]
-    (.branch builder (map->Branch branch true))))
+    (.branch builder (map->Branch$Builder branch))))
 
 (defmethod bd/builder-override [ParallelState ::catchers] [_ ^ParallelState$Builder builder catchers]
   (doseq [catcher catchers]
-    (.catcher builder (map->Catcher catcher true))))
+    (.catcher builder (map->Catcher$Builder catcher))))
 
 (defmethod bd/builder-override [ParallelState ::retriers] [_ ^ParallelState$Builder builder retriers]
   (doseq [retrier retriers]
-    (.retrier builder (map->Retrier retrier true))))
+    (.retrier builder (map->Retrier$Builder retrier))))
 
 (defmethod bd/builder-override [ParallelState ::transition] [_ ^ParallelState$Builder builder transition]
   (.transition builder (map->Transition transition)))
@@ -380,13 +380,13 @@
                            ::retriers ::transition})
 
 (def state-kw->map->Bean
-  {::choice   map->ChoiceState
-   ::fail     map->FailState
-   ::parallel map->ParallelState
-   ::pass     map->PassState
-   ::succeed  map->SucceedState
-   ::task     map->TaskState
-   ::wait     map->WaitState})
+  {::choice   map->ChoiceState$Builder
+   ::fail     map->FailState$Builder
+   ::parallel map->ParallelState$Builder
+   ::pass     map->PassState$Builder
+   ::succeed  map->SucceedState$Builder
+   ::task     map->TaskState$Builder
+   ::wait     map->WaitState$Builder})
 
 (def bean-class->state-kw
   {ChoiceState   ::choice
