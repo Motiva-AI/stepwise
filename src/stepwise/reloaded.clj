@@ -14,19 +14,6 @@
                                                        ExecutionDoesNotExistException)
            (java.util UUID)))
 
-; Issues
-; ------
-; 1) Background long polling steals tasks from fresh handler
-; 2) Changes to state machine require new one to be created
-;
-; + find all state machines in namespace
-; + find their executions and stop them
-; + delete state machines
-; + find all activities
-; + delete all activities
-; + new state machine name: lowest possible
-; + new activity name: last one plus one -> cycles/min then reset
-
 (def max-cycles-per-minute 120)
 (def version-delimiter "_SNAPSHOT")
 (def version-delimiter-re (re-pattern version-delimiter))

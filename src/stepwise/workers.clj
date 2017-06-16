@@ -3,6 +3,7 @@
             [stepwise.model :as mdl]
             [stepwise.client :as client]
             [stepwise.serialization :as ser]
+            [clojure.tools.logging :as log]
             [clojure.string :as strs])
   (:import (java.net SocketTimeoutException)))
 
@@ -14,7 +15,8 @@
   (let [chan (async/chan)]
     (future (async/>!! chan (try (client/get-activity-task activity-arn)
                                  (catch Throwable e
-                                   (when-not (instance? SocketTimeoutException (.getCause e))
+                                   (if (instance? SocketTimeoutException (.getCause e))
+                                     (log/debug e)
                                      ; TODO PREREL pluggable logging instead
                                      (prn e))
                                    e)))

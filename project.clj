@@ -14,6 +14,7 @@
                               :username :env/artifactory_user
                               :password :env/artifactory_password}}
   :dependencies [[uwcpdx/bean-dip "0.7.1" :exclusions [joda-time]]
+                 [org.clojure/tools.logging "0.4.0"]
                  [org.clojure/data.json "0.2.6"]
                  [org.clojure/core.async "0.3.441"]
                  [com.amazonaws/aws-java-sdk-iam "1.11.86"]
