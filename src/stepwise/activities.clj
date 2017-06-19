@@ -1,5 +1,5 @@
 (ns stepwise.activities
-  (:refer-clojure :exclude [ensure])
+  (:refer-clojure :exclude [ensure compile])
   (:require [clojure.walk :as walk]
             [stepwise.arns :as arns]
             [stepwise.interceptors :as interceptors]
@@ -46,25 +46,24 @@
 (defn identity-handler-fn [{:keys [input]}] input)
 
 (defn compile [handler]
-  (interceptors/compile (into (vec (:interceptors handler))
-                              [(make-handler-interceptor (get handler
-                                                              :handler-fn
-                                                              identity-handler-fn))])))
+  (if (fn? handler)
+    handler
+    (interceptors/compile (into (vec (:interceptors handler))
+                                [(make-handler-interceptor (get handler
+                                                                :handler-fn
+                                                                identity-handler-fn))]))))
 
 (defn compile-all [activity->handler]
   (into {}
         (map (fn [[activity handler]]
-               [activity
-                (if (fn? handler)
-                  handler
-                  (compile handler))]))
+               [activity (compile handler)]))
         activity->handler))
 
 (defn invoke [activity->handler activity-name input]
-  (let [compiled (compile-all activity->handler)]
-    (if (contains? compiled activity-name)
-      ((get compiled activity-name) input (fn []))
-      (throw (ex-info "Activity name missing in handler map"
-                      {:activity-name activity-name
-                       :handled-keys  (set (keys activity->handler))})))))
+  (if (contains? activity->handler activity-name)
+    (let [compiled (compile (get activity->handler activity-name))]
+      (compiled input (fn [])))
+    (throw (ex-info "Activity name missing in handler map"
+                    {:activity-name activity-name
+                     :handled-keys  (set (keys activity->handler))}))))
 

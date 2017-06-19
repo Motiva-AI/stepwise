@@ -1,11 +1,15 @@
 (ns stepwise.interceptors
-  (:refer-clojure :exclude [compile]))
+  (:refer-clojure :exclude [compile])
+  (:require [clojure.tools.logging :as log]))
 
 ; cribbed from re-frame -- thanks re-frame!
 
 (defn- invoke-interceptor-fn
   ; TODO clean up names
-  [context [_ interceptor] direction]
+  [context [id interceptor] direction]
+  (log/trace (prn-str {:interceptor id
+                       :direction   direction
+                       :context     context}))
   (if-let [f (get interceptor direction)]
     (f context)
     context))

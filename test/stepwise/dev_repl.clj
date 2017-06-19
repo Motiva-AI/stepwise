@@ -92,10 +92,10 @@
                                                    :timeout-seconds 3
                                                    :end             true}}})
 
-      #spy/p (core/run-execution namespace
-                                 machine-id
-                                 {:input {:a 1
-                                          :b 2}})
+      (core/run-execution namespace
+                          machine-id
+                          {:input {:a 1
+                                   :b 2}})
       (core/shutdown-workers workers)
       )
 
@@ -118,7 +118,7 @@
                             {:a 1
                              :b 2})
   (sgr/get-non-model-keys {:foo [{:bar :bam}]
-                           :bim {:boom :bap
+                           :bim {:boom          :bap
                                  ::mdl/resource "hi"}})
   )
 

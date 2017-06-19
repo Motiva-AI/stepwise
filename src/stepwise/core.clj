@@ -7,7 +7,8 @@
             [stepwise.model :as mdl]
             [stepwise.arns :as arns]
             [clojure.set :as sets]
-            [clojure.core.async :as async]))
+            [clojure.core.async :as async]
+            [clojure.tools.logging :as log]))
 
 (defn create-state-machine [env-name name definition]
   (let [definition         (sgr/desugar definition)
@@ -33,6 +34,9 @@
   ; TODO occasionally not long enough for execution to even be visible yet -- catch
   (Thread/sleep 500)
   (loop [execution (client/describe-execution execution-arn)]
+    (log/debug "Polled execution status"
+               (prn-str {:arn    execution-arn
+                         :status (::mdl/status execution)}))
     (if (= (::mdl/status execution) "RUNNING")
       ; TODO should do a backoff here to cover both short and longer running executions gracefully
       (do (Thread/sleep 500)
@@ -50,16 +54,16 @@
   ([env-name task-handlers]
    (start-workers env-name task-handlers nil))
   ([env-name task-handlers {:keys [task-concurrency]}]
-    (let [activity->arn (into {}
-                              (map (fn [activity-name]
-                                     [activity-name (arns/get-activity-arn env-name activity-name)]))
-                              (keys task-handlers))
-          ; was tripping call throttles
-          #_(activities/ensure-all env-name (keys task-handlers))]
-      (workers/boot (-> task-handlers
-                        (sets/rename-keys activity->arn)
-                        (activities/compile-all))
-                    task-concurrency))))
+   (let [activity->arn (into {}
+                             (map (fn [activity-name]
+                                    [activity-name (arns/get-activity-arn env-name activity-name)]))
+                             (keys task-handlers))
+         ; was tripping call throttles
+         #_(activities/ensure-all env-name (keys task-handlers))]
+     (workers/boot (-> task-handlers
+                       (sets/rename-keys activity->arn)
+                       (activities/compile-all))
+                   task-concurrency))))
 
 (defn shutdown-workers [workers]
   (async/>!! (:terminate-chan workers) :shutdown)

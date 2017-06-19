@@ -115,12 +115,12 @@
                         :min-count 2)
         :single ::sgr/error))
 
-(s/def ::sgr/catchers
+(s/def ::sgr/catch
   (s/coll-of (s/keys :req-un [::sgr/error-equals ::sgr/next]
                      :opt-un [::mdl/result-path])
              :gen-max 3))
 
-(s/def ::sgr/retriers
+(s/def ::sgr/retry
   (s/coll-of (s/keys :req-un [::sgr/error-equals]
                      :opt-un [::mdl/backoff-rate ::mdl/interval-seconds ::mdl/max-attempts])
              :gen-max 3))
@@ -128,7 +128,7 @@
 (s/def ::sgr/parallel
   (s/merge (type= ::mdl/parallel)
            (s/keys :req-un [::sgr/branches]
-                   :opt-un [::sgr/catchers ::sgr/retriers ::mdl/comment ::mdl/input-path
+                   :opt-un [::sgr/catch ::sgr/retry ::mdl/comment ::mdl/input-path
                             ::mdl/output-path ::mdl/result-path])
            (s/get-spec ::sgr/transition)))
 
@@ -145,7 +145,7 @@
 (s/def ::sgr/task
   (s/merge (type= ::mdl/task)
            (s/keys :req-un [::mdl/resource]
-                   :opt-un [::sgr/catchers ::sgr/retriers ::mdl/comment ::mdl/heartbeat-seconds
+                   :opt-un [::sgr/catch ::sgr/retry ::mdl/comment ::mdl/heartbeat-seconds
                             ::mdl/input-path ::mdl/output-path ::mdl/result-path
                             ::mdl/timeout-seconds])
            (s/get-spec ::sgr/transition)))

@@ -180,6 +180,22 @@
 (defmethod sugar* ::mdl/result [_ result]
   (json/deser-io-doc result))
 
+(defmethod desugar* ::retry [_ retriers]
+  {::key ::mdl/retriers
+   ::val retriers})
+
+(defmethod sugar* ::mdl/retriers [_ retriers]
+  {::key :retry
+   ::val retriers})
+
+(defmethod desugar* ::catch [_ catchers]
+  {::key ::mdl/catchers
+   ::val catchers})
+
+(defmethod sugar* ::mdl/catchers [_ catchers]
+  {::key :catch
+   ::val catchers})
+
 (defn renamespace-keys [match-key? target-ns]
   (fn [node]
     (if (and (instance? MapEntry node)
@@ -231,8 +247,6 @@
     ::mdl/heartbeat-seconds
     ::mdl/timeout-seconds
     ::mdl/branches
-    ::mdl/retriers
-    ::mdl/catchers
     ::mdl/choices
     ::mdl/states
     ::mdl/resource

@@ -4,7 +4,7 @@
             [stepwise.client :as client]
             [stepwise.serialization :as ser]
             [clojure.tools.logging :as log]
-            [clojure.string :as strs])
+            [stepwise.maps :as maps])
   (:import (java.net SocketTimeoutException)))
 
 (def default-activity-concurrency 1)
@@ -16,9 +16,8 @@
     (future (async/>!! chan (try (client/get-activity-task activity-arn)
                                  (catch Throwable e
                                    (if (instance? SocketTimeoutException (.getCause e))
-                                     (log/debug e)
-                                     ; TODO PREREL pluggable logging instead
-                                     (prn e))
+                                     (log/debug (prn-str e))
+                                     (log/warn (prn-str e)))
                                    e)))
             (async/close! chan))
     chan))
@@ -39,7 +38,7 @@
                       max-cause-length)
             "")})
 
-(defn handle [task handler-fn]
+(defn handle [activity-arn task handler-fn]
   (let [chan (async/chan)]
     [chan (future (let [result (try (handler-fn (::mdl/input task)
                                                 #(client/send-task-heartbeat
@@ -48,17 +47,21 @@
                     (when-not (.isInterrupted (Thread/currentThread))
                       (try
                         (if (instance? Throwable result)
-                          ; TODO PREREL also log
-                          (client/send-task-failure (::mdl/task-token task)
-                                                    (exception->failure-map result))
-                          (client/send-task-success (::mdl/task-token task)
-                                                    result))
+                          (do
+                            (log/warn result
+                                      "Activity task failed"
+                                      (prn-str (maps/syms->map activity-arn task)))
+                            (client/send-task-failure (::mdl/task-token task)
+                                                      (exception->failure-map result)))
+                          (do
+                            (log/debug "Activity task completed"
+                                       (prn-str (maps/syms->map activity-arn task result)))
+                            (client/send-task-success (::mdl/task-token task)
+                                                      result)))
                         (catch Throwable e
-                          ; TODO PREREL pluggable logging instead
-                          (prn (ex-info "Failed to send activity task result"
-                                        {:task   task
-                                         :result result}
-                                        e))))))
+                          (log/error e
+                                     "Failed to send activity task result"
+                                     (prn-str (maps/syms->map activity-arn task result)))))))
                   (async/>!! chan :done)
                   (async/close! chan))]))
 
@@ -88,7 +91,9 @@
                   ::polling)
 
            :else
-           (let [[handler-chan handler-future] (handle message handler-fn)]
+           (let [[handler-chan handler-future] (handle activity-arn
+                                                       message
+                                                       handler-fn)]
              (recur (async/alts! [terminate-chan handler-chan])
                     handler-future
                     handler-chan
