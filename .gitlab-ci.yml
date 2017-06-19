@@ -1,6 +1,6 @@
 image: spieden/lein-project:2.6.0-1
 build:
   script:
-    - lein with-profiles release test
-    - lein with-profiles release deploy
+    - lein with-profiles dev test
+    - lein deploy
 
