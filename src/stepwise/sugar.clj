@@ -6,7 +6,7 @@
             [stepwise.serialization :as json]
             [stepwise.serialization :as ser])
   (:import (java.util Date)
-           (clojure.lang MapEntry)))
+           (clojure.lang MapEntry Seqable)))
 
 (defmulti sugar* (fn [k _] k))
 (defmulti desugar* (fn [k _] k))
@@ -153,7 +153,8 @@
 (defmethod desugar* ::error-equals [_ error-equals]
   (into #{}
         (map ser/ser-keyword-name)
-        (if (seqable? error-equals)
+        (if (or (seq? error-equals)
+                (instance? Seqable error-equals))
           error-equals
           #{error-equals})))
 
@@ -278,7 +279,7 @@
                            ::mdl/states)))
               (remove (fn [path]
                         (let [last-node (last path)]
-                          (or (int? last-node)
+                          (or (instance? Long last-node)
                               (= (namespace last-node) "stepwise.model"))))))
         (tree-seq (fn [[_ value]]
                     (coll? value))
