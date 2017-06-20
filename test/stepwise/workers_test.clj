@@ -3,7 +3,7 @@
             [stepwise.workers :as main]
             [clojure.core.async :as async]))
 
-(defn wait-timeout-ms 400)
+(def wait-timeout-ms 400)
 
 (defn boot
   ([do-task-fn]
