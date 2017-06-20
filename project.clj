@@ -3,6 +3,7 @@
                                   [org.clojure/tools.namespace "0.2.11"]
                                   [org.clojure/clojure "1.9.0-alpha14"]
                                   [pjstadig/humane-test-output "0.8.1"]
+                                  [org.slf4j/slf4j-simple "1.7.25"]
                                   [com.gfredericks/test.chuck "0.2.7"]
                                   [alembic "0.3.2"]
                                   [org.clojure/test.check "0.9.0"]]

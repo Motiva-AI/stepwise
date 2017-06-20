@@ -1,4 +1,5 @@
 (ns stepwise.interceptors-test
+  (:refer-clojure :exclude [compile])
   (:require [clojure.test :as test]
             [stepwise.interceptors :as main]))
 
