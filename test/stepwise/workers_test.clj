@@ -91,3 +91,6 @@
       (test/is (instance? InterruptedException
                           (deref got-exception 100 :timeout))))))
 
+; TODO coverage for polling backoff
+; TODO coverage for worker death on missing activity
+
