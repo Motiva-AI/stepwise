@@ -3,6 +3,8 @@
             [stepwise.workers :as main]
             [clojure.core.async :as async]))
 
+(defn wait-timeout-ms 400)
+
 (defn boot
   ([do-task-fn]
    (boot do-task-fn
@@ -30,13 +32,13 @@
     (let [got-task (promise)
           {:keys [term-chan all-exited-chan]} (boot #(deliver got-task %))]
       (test/is (= :input
-                  (deref got-task 200 :timeout)))
+                  (deref got-task wait-timeout-ms :timeout)))
       (test/is (= term-chan
                   (second (async/alts!! [[term-chan :shutdown]
-                                         (async/timeout 10)]))))
+                                         (async/timeout wait-timeout-ms)]))))
       (test/is (= :done
                   (first (async/alts!! [all-exited-chan
-                                        (async/timeout 10)]))))))
+                                        (async/timeout wait-timeout-ms)]))))))
 
   (test/testing "passes two tasks serially to handler and shuts down cleanly"
     (let [promise-a    (promise)
@@ -46,15 +48,15 @@
                                                       (when-let [prom (async/poll! promise-chan)]
                                                         (deliver prom task))))]
       (test/is (= :input
-                  (deref promise-a 10 :timeout)))
+                  (deref promise-a wait-timeout-ms :timeout)))
       (test/is (= :input
-                  (deref promise-b 10 :timeout)))
+                  (deref promise-b wait-timeout-ms :timeout)))
       (test/is (= term-chan
                   (second (async/alts!! [[term-chan :shutdown]
-                                         (async/timeout 10)]))))
+                                         (async/timeout wait-timeout-ms)]))))
       (test/is (= :done
                   (first (async/alts!! [all-exited-chan
-                                        (async/timeout 10)]))))))
+                                        (async/timeout wait-timeout-ms)]))))))
 
   (test/testing "interrupts handler on kill"
     (let [got-exception       (promise)
@@ -65,12 +67,12 @@
           {:keys [term-chan all-exited-chan]} (boot capture-interrupted)]
       (test/is (= term-chan
                   (second (async/alts!! [[term-chan :kill]
-                                         (async/timeout 100)]))))
+                                         (async/timeout wait-timeout-ms)]))))
       (test/is (= :done
                   (first (async/alts!! [all-exited-chan
-                                        (async/timeout 100)]))))
+                                        (async/timeout wait-timeout-ms)]))))
       (test/is (instance? InterruptedException
-                          (deref got-exception 200 :timeout)))))
+                          (deref got-exception wait-timeout-ms :timeout)))))
 
   (test/testing "interrupts handler that's holding up a shutdown on kill"
     (let [got-exception       (promise)
@@ -81,15 +83,15 @@
           {:keys [term-chan all-exited-chan]} (boot capture-interrupted)]
       (test/is (= term-chan
                   (second (async/alts!! [[term-chan :shutdown]
-                                         (async/timeout 100)]))))
+                                         (async/timeout wait-timeout-ms)]))))
       (test/is (= term-chan
                   (second (async/alts!! [[term-chan :kill]
-                                         (async/timeout 100)]))))
+                                         (async/timeout wait-timeout-ms)]))))
       (test/is (= :done
                   (first (async/alts!! [all-exited-chan
-                                        (async/timeout 100)]))))
+                                        (async/timeout wait-timeout-ms)]))))
       (test/is (instance? InterruptedException
-                          (deref got-exception 200 :timeout))))))
+                          (deref got-exception wait-timeout-ms :timeout))))))
 
 ; TODO coverage for polling backoff
 ; TODO coverage for worker death on missing activity
