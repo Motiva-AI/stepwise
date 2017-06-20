@@ -53,8 +53,7 @@
       (throw (ex-info "Malformed interceptor"
                       {:index index
                        :form  interceptor}))))
-  (with-meta {:heartbeat? true}
-             (fn execute [input send-heartbeat]
+  (with-meta (fn execute [input send-heartbeat]
                (-> {:input   input
                     :output  nil
                     :context {:send-heartbeat send-heartbeat}
@@ -63,5 +62,6 @@
                    (invoke-interceptors :before)
                    change-direction
                    (invoke-interceptors :after)
-                   :output))))
+                   :output))
+             {:heartbeat? true}))
 
