@@ -30,7 +30,7 @@
     (let [got-task (promise)
           {:keys [term-chan all-exited-chan]} (boot #(deliver got-task %))]
       (test/is (= :input
-                  (deref got-task 100 :timeout)))
+                  (deref got-task 200 :timeout)))
       (test/is (= term-chan
                   (second (async/alts!! [[term-chan :shutdown]
                                          (async/timeout 10)]))))
@@ -89,8 +89,16 @@
                   (first (async/alts!! [all-exited-chan
                                         (async/timeout 100)]))))
       (test/is (instance? InterruptedException
-                          (deref got-exception 100 :timeout))))))
+                          (deref got-exception 200 :timeout))))))
 
 ; TODO coverage for polling backoff
 ; TODO coverage for worker death on missing activity
 
+{:output            2,
+ :state-machine-arn "arn:aws:states:us-west-2:256212633204:stateMachine:adder",
+ :start-date        #inst"2017-06-20T22:48:14.241-00:00",
+ :stop-date         #inst"2017-06-20T22:48:14.425-00:00",
+ :input             {:x 1, :y 1},
+ :arn               "arn:aws:states:us-west-2:256212633204:execution:adder:9c5623c6-eee3-49fa-a7d6-22e3ca236c9a",
+ :status            "SUCCEEDED",
+ :name              "9c5623c6-eee3-49fa-a7d6-22e3ca236c9a"}

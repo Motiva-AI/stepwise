@@ -1,6 +1,6 @@
 ## Stepwise
 
-Stepwise is an idiomatic Clojure library for [AWS Step Functions](https://aws.amazon.com/step-functions/). It enables you to easily develop coordination workflows for distributed systems using a minimal, data-centric API.
+Stepwise is an idiomatic Clojure library for [AWS Step Functions](https://aws.amazon.com/step-functions/). It enables you to easily develop coordination workflows for distributed systems using a minimal, data-centric API. Features:
 
  * Lightly sugared EDN representation of the [Amazon States Language](https://states-language.net/spec.html)
  * Activity task polling and handling
@@ -8,6 +8,7 @@ Stepwise is an idiomatic Clojure library for [AWS Step Functions](https://aws.am
 
 ### Example
 
+Here's a trivial machine with one state that simply adds two inputs together:
 
 ```clojure
 (require '[stepwise.core :as stepwise])
@@ -17,14 +18,23 @@ Stepwise is an idiomatic Clojure library for [AWS Step Functions](https://aws.am
                                 :states   {:add {:type     :task
                                                  :resource :activity/add
                                                  :end      true}}})
-=> "arn:aws:states:us-west-2:256212633204:stateMachine:adder"
+=> "arn:aws:states:us-west-2:XXXXXXXXXXXX:stateMachine:adder"
 
-(def workers (stepwise/start-workers {:activity/add (fn [{:keys [x y]}] (+ x y))}))
-=> #'stepwise.dev-repl/workers
+(stepwise/start-workers {:activity/add (fn [{:keys [x y]}] (+ x y))})
+=> ...
 
-(:output (stepwise/run-execution :adder {:input {:x 1 :y 1}}))
-=> 2
+(stepwise/run-execution :adder {:input {:x 1 :y 1}})
+=>
+{:input             {:x 1 :y 1}
+ :output            2
+ :state-machine-arn "arn:aws:states:us-west-2:XXXXXXXXXXXX:stateMachine:adder"
+ :start-date        #inst"2017-06-20T22:48:14.241-00:00"
+ :stop-date         #inst"2017-06-20T22:48:14.425-00:00"
+ :arn               "arn:aws:states:us-west-2:XXXXXXXXXXXX:execution:adder:9c5623c6-eee3-49fa-a7d6-22e3ca236c9a"
+ :status            "SUCCEEDED"
+ :name              "9c5623c6-eee3-49fa-a7d6-22e3ca236c9a"}
 
-(stepwise/shutdown-workers workers)
+(stepwise/shutdown-workers *2)
 => #{:done}
 ```
+
