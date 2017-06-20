@@ -70,7 +70,7 @@
                   (first (async/alts!! [all-exited-chan
                                         (async/timeout 100)]))))
       (test/is (instance? InterruptedException
-                          (deref got-exception 100 :timeout)))))
+                          (deref got-exception 200 :timeout)))))
 
   (test/testing "interrupts handler that's holding up a shutdown on kill"
     (let [got-exception       (promise)
