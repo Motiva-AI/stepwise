@@ -65,11 +65,16 @@
                        (activities/compile-all))
                    task-concurrency))))
 
+(defn wait-all-exit! [{:keys [exit-chans]}]
+  (->> (async/merge exit-chans)
+       (async/into #{})
+       (async/<!!)))
+
 (defn shutdown-workers [workers]
   (async/>!! (:terminate-chan workers) :shutdown)
-  (async/<!! (:exited-chan workers)))
+  (wait-all-exit! workers))
 
 (defn kill-workers [workers]
   (async/>!! (:terminate-chan workers) :kill)
-  (async/<!! (:exited-chan workers)))
+  (wait-all-exit! workers))
 

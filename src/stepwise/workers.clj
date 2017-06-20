@@ -5,7 +5,7 @@
             [stepwise.serialization :as ser]
             [clojure.tools.logging :as log]
             [stepwise.maps :as maps])
-  (:import (java.net SocketTimeoutException)))
+  (:import (com.amazonaws AmazonServiceException)))
 
 (def default-activity-concurrency 1)
 (def max-error-length 256)
@@ -13,11 +13,9 @@
 
 (defn poll [activity-arn]
   (let [chan (async/chan)]
-    (future (async/>!! chan (try (client/get-activity-task activity-arn)
+    (future (async/>!! chan (try (not-empty (client/get-activity-task activity-arn))
                                  (catch Throwable e
-                                   (if (instance? SocketTimeoutException (.getCause e))
-                                     (log/debug (prn-str e))
-                                     (log/warn (prn-str e)))
+                                   (log/warn (prn-str e))
                                    e)))
             (async/close! chan))
     chan))
@@ -65,6 +63,11 @@
                   (async/>!! chan :done)
                   (async/close! chan))]))
 
+(defn poll-with-backoff [poll activity-arn consec-poll-fail]
+  (async/go (async/<! (async/timeout (min (* consec-poll-fail 200)
+                                          4000)))
+            (async/<! (poll activity-arn))))
+
 (defn boot-worker
   ([terminate-mult activity-arn handler-fn]
    (boot-worker terminate-mult activity-arn handler-fn poll handle))
@@ -74,6 +77,7 @@
      (async/go-loop [[message channel] (async/alts! [terminate-chan (poll activity-arn)])
                      handler-future nil
                      handler-chan nil
+                     consec-poll-fail 0
                      state ::polling]
        (condp = state
          ::polling
@@ -81,13 +85,28 @@
            (= channel terminate-chan)
            :done
 
-           (or (instance? Throwable message)
-               (empty? message))
-           ; TODO PREREL exponential backoff
-           ; TODO PREREL fatal error on "ActivityDoesNotExist" error code
+           (and (instance? AmazonServiceException message)
+                (= (.getErrorCode ^AmazonServiceException message)
+                   "ActivityDoesNotExist"))
+           (do (log/error message
+                          "Polling terminated for non-existent activity"
+                          {:arn activity-arn})
+               message)
+
+           (instance? Throwable message)
+           (recur (async/alts! [terminate-chan (poll-with-backoff poll
+                                                                  activity-arn
+                                                                  consec-poll-fail)])
+                  nil
+                  nil
+                  (+ consec-poll-fail 1)
+                  ::polling)
+
+           (nil? message)
            (recur (async/alts! [terminate-chan (poll activity-arn)])
                   nil
                   nil
+                  0
                   ::polling)
 
            :else
@@ -97,6 +116,7 @@
              (recur (async/alts! [terminate-chan handler-chan])
                     handler-future
                     handler-chan
+                    0
                     ::handling)))
 
          ::handling
@@ -111,12 +131,14 @@
              (recur (async/alts! [terminate-chan handler-chan])
                     handler-future
                     handler-chan
+                    consec-poll-fail
                     ::shutting-down))
 
            :else
            (recur (async/alts! [terminate-chan (poll activity-arn)])
                   nil
                   nil
+                  consec-poll-fail
                   ::polling))
 
          ::shutting-down
@@ -137,7 +159,7 @@
 (defn boot [activity-arn->handler-fn & [activity-arn->concurrency]]
   (let [terminate-chan (async/chan)
         terminate-mult (async/mult terminate-chan)
-        exited-chans   (into #{}
+        exit-chans     (into #{}
                              (mapcat (fn [[activity-arn handler-fn]]
                                        (boot-workers terminate-mult
                                                      activity-arn
@@ -145,10 +167,7 @@
                                                      (get activity-arn->concurrency
                                                           activity-arn
                                                           default-activity-concurrency))))
-                             activity-arn->handler-fn)
-        exited-chan    (->> exited-chans
-                            async/merge
-                            (async/into #{}))]
-    {:terminate-chan terminate-chan
-     :exited-chan    exited-chan}))
+                             activity-arn->handler-fn)]
+    (maps/syms->map terminate-chan
+                    exit-chans)))
 
