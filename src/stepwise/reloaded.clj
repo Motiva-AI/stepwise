@@ -56,21 +56,19 @@
   (doseq [arn arns]
     (client/delete-activity arn)))
 
-(defn get-family-arns [env-name machine-name]
+(defn get-family-arns [machine-name]
   (into #{}
         (comp (filter #(= (deversion-name (::mdl/name %))
-                          (arns/make-name env-name machine-name)))
+                          (arns/make-name machine-name)))
               (map ::mdl/arn))
         (::mdl/state-machines (client/list-state-machines))))
 
-(defn run-execution [env-name machine-name definition task-handlers input]
-  (let [machine-arns     (get-family-arns env-name machine-name)
+(defn run-execution [machine-name definition task-handlers input]
+  (let [machine-arns     (get-family-arns machine-name)
         version          (get-next-version machine-arns)
         machine-name     (version-name version machine-name)
         activity-names   (activities/get-names definition)
-        member-activity? (into #{}
-                               (map (partial arns/make-name env-name))
-                               activity-names)
+        member-activity? (into #{} (map arns/make-name) activity-names)
         activity-arns    (into #{}
                                (comp (filter #(member-activity? (deversion-name (::mdl/name %))))
                                      (map ::mdl/arn))
@@ -80,20 +78,20 @@
     (purge-activities activity-arns)
 
     (let [activity->arn (into {}
-                              (map #(vector % (activities/ensure env-name
-                                                                 (version-name version %)))
+                              (map #(vector % (activities/ensure (version-name version %)))
                                    (keys task-handlers)))
           definition    (->> definition
                              (sgr/desugar)
                              (activities/resolve-names activity->arn))
-          _             (client/create-state-machine (arns/make-name env-name machine-name)
+          _             (client/create-state-machine (arns/make-name machine-name)
                                                      definition
                                                      (iam/ensure-execution-role))
           workers       (workers/boot (-> task-handlers
                                           (sets/rename-keys activity->arn)
                                           (activities/compile-all)))
-          result        (core/run-execution env-name machine-name {:input          input
-                                                                   :execution-name (str (UUID/randomUUID))})]
+          result        (core/run-execution machine-name
+                                            {:input          input
+                                             :execution-name (str (UUID/randomUUID))})]
       (core/kill-workers workers)
       result)))
 

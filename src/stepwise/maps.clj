@@ -2,7 +2,7 @@
 
 (defn syms->pairs [syms]
   (into []
-        (mapcat #(vector (keyword (name 'stepwise.model) (name %))
+        (mapcat #(vector (keyword (name %))
                          %))
         syms))
 

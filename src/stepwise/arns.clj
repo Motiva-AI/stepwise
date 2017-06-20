@@ -12,26 +12,25 @@
              (.getCallerIdentity (GetCallerIdentityRequest.))
              (.getAccount))))
 
-(defn make-name [env-name name-kw]
-  (str env-name "_" (ser/ser-keyword-name name-kw)))
+(defn make-name [name]
+  (ser/ser-keyword-name name))
 
-(defn get-arn-stem [env-name state-machine-name resource]
+(defn get-arn-stem [state-machine-name resource]
   (str "arn:aws:states:" @region
        ":" @account-number
        ":" resource ":"
-       (make-name env-name state-machine-name)))
+       (make-name state-machine-name)))
 
-(defn get-state-machine-arn [env-name state-machine-name]
-  (get-arn-stem env-name state-machine-name "stateMachine"))
+(defn get-state-machine-arn [state-machine-name]
+  (get-arn-stem state-machine-name "stateMachine"))
 
-(defn get-execution-arn [env-name state-machine-name execution-name]
-  (str (get-arn-stem env-name
-                     state-machine-name
+(defn get-execution-arn [state-machine-name execution-name]
+  (str (get-arn-stem state-machine-name
                      "execution")
        ":" execution-name))
 
-(defn get-activity-arn [env-name activity-name]
-  (get-arn-stem env-name activity-name "activity"))
+(defn get-activity-arn [activity-name]
+  (get-arn-stem activity-name "activity"))
 
 (defn get-role-arn [path role-name]
   (str "arn:aws:iam::" @account-number ":role" path role-name))

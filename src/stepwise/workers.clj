@@ -38,9 +38,11 @@
 
 (defn handle [activity-arn task handler-fn]
   (let [chan (async/chan)]
-    [chan (future (let [result (try (handler-fn (::mdl/input task)
-                                                #(client/send-task-heartbeat
-                                                   (::mdl/task-token task)))
+    [chan (future (let [result (try (if (-> handler-fn meta :heartbeat?)
+                                      (handler-fn (::mdl/input task)
+                                                  #(client/send-task-heartbeat
+                                                     (::mdl/task-token task)))
+                                      (handler-fn (::mdl/input task)))
                                     (catch Throwable e e))]
                     (when-not (.isInterrupted (Thread/currentThread))
                       (try

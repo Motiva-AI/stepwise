@@ -8,25 +8,30 @@
             [stepwise.arns :as arns]
             [clojure.set :as sets]
             [clojure.core.async :as async]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [clojure.walk :as walk]))
 
-(defn create-state-machine [env-name name definition]
+(defn denamespace-keys [response]
+  (walk/prewalk (sgr/renamespace-keys (constantly true) nil)
+                response))
+
+(defn create-state-machine [name definition]
   (let [definition         (sgr/desugar definition)
-        activity-name->arn (activities/ensure-all env-name (activities/get-names definition))
+        activity-name->arn (activities/ensure-all (activities/get-names definition))
         definition         (activities/resolve-names activity-name->arn definition)]
-    (client/create-state-machine (arns/make-name env-name name)
+    (client/create-state-machine (arns/make-name name)
                                  definition
                                  (iam/ensure-execution-role))))
 
 (defn start-execution
-  ([env-name state-machine]
-   (start-execution env-name state-machine nil))
-  ([env-name state-machine-name {:keys [input execution-name]}]
+  ([state-machine]
+   (start-execution state-machine nil))
+  ([state-machine-name {:keys [input execution-name]}]
    (let [input (if execution-name
                  (assoc input :state-machine-name state-machine-name
                               :execution-name execution-name)
                  input)]
-     (client/start-execution (arns/get-state-machine-arn env-name state-machine-name)
+     (client/start-execution (arns/get-state-machine-arn state-machine-name)
                              {:input input
                               :name  execution-name}))))
 
@@ -41,25 +46,24 @@
       ; TODO should do a backoff here to cover both short and longer running executions gracefully
       (do (Thread/sleep 500)
           (recur (client/describe-execution execution-arn)))
-      execution))
-  (client/get-execution-history execution-arn))
+      (denamespace-keys execution))))
 
 (defn run-execution
-  ([env-name state-machine-name]
-   (run-execution env-name state-machine-name nil))
-  ([env-name state-machine-name {:keys [input execution-name] :as opts}]
-   (await-execution (start-execution env-name state-machine-name opts))))
+  ([state-machine-name]
+   (run-execution state-machine-name nil))
+  ([state-machine-name {:keys [input execution-name] :as opts}]
+   (await-execution (start-execution state-machine-name opts))))
 
 (defn start-workers
-  ([env-name task-handlers]
-   (start-workers env-name task-handlers nil))
-  ([env-name task-handlers {:keys [task-concurrency]}]
+  ([task-handlers]
+   (start-workers task-handlers nil))
+  ([task-handlers {:keys [task-concurrency]}]
    (let [activity->arn (into {}
                              (map (fn [activity-name]
-                                    [activity-name (arns/get-activity-arn env-name activity-name)]))
+                                    [activity-name (arns/get-activity-arn activity-name)]))
                              (keys task-handlers))
          ; was tripping call throttles
-         #_(activities/ensure-all env-name (keys task-handlers))]
+         #_(activities/ensure-all (keys task-handlers))]
      (workers/boot (-> task-handlers
                        (sets/rename-keys activity->arn)
                        (activities/compile-all))

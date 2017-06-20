@@ -3,11 +3,11 @@
             [clojure.string :as strs]
             [clojure.pprint :as pprint]))
 
-; TODO Date sniff test+deser(?)
+; TODO Date(Time) sniff test+deser(?)
 (defn deser-io-doc [json-str]
   (json/read-str json-str :key-fn keyword))
 
-; TODO Date serialization
+; TODO Date(Time) serialization
 (defn ser-io-doc [data]
   (json/write-str data))
 

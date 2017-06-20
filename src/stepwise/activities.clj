@@ -27,16 +27,14 @@
                     node))
                 definition))
 
-(defn ensure [env-name kw-name]
-  (->> kw-name
-       (arns/make-name env-name)
-       client/create-activity))
+(defn ensure [kw-name]
+  (client/create-activity (arns/make-name kw-name)))
 
-(defn ensure-all [env-name kw-names]
+(defn ensure-all [activity-names]
   (into {}
-        (map (fn [kw-name]
-               [kw-name (ensure env-name kw-name)]))
-        kw-names))
+        (map (fn [activity-name]
+               [activity-name (ensure activity-name)]))
+        activity-names))
 
 (defn make-handler-interceptor [handler-fn]
   [:handler
