@@ -3,7 +3,7 @@
             [stepwise.workers :as main]
             [clojure.core.async :as async]))
 
-(def wait-timeout-ms 1000)
+(def wait-timeout-ms 2000)
 
 (defn boot
   ([do-task-fn]
