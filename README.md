@@ -1,5 +1,7 @@
 ## Stepwise
 
+[![CircleCI](https://circleci.com/gh/uwcpdx/stepwise/tree/master.svg?style=svg)](https://circleci.com/gh/uwcpdx/stepwise/tree/master)
+
 Stepwise is an idiomatic Clojure library for [AWS Step Functions](https://aws.amazon.com/step-functions/). It enables you to easily develop coordination workflows for distributed systems using a minimal, data-centric API. Features:
 
  * Lightly sugared EDN representation of the [Amazon States Language](https://states-language.net/spec.html)
