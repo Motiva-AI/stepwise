@@ -11,9 +11,10 @@
                                   (require 'spyscope.core)
                                   (pjstadig.humane-test-output/activate!)]
                    :main         stepwise.dev-repl}}
-  :repositories {"snapshots" {:url      "https://ncgl.jfrog.io/ncgl/libs-snapshot-local"
-                              :username :env/artifactory_user
-                              :password :env/artifactory_password}}
+  :deploy-repositories {"clojars" {:url           "https://clojars.org/repo"
+                                   :username      :env/CLOJARS_USERNAME
+                                   :password      :env/CLOJARS_PASSWORD
+                                   :sign-releases false}}
   :dependencies [[uwcpdx/bean-dip "0.7.1" :exclusions [joda-time]]
                  [org.clojure/tools.logging "0.4.0"]
                  [org.clojure/data.json "0.2.6"]
