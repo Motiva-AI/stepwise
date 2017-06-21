@@ -3,7 +3,7 @@
             [stepwise.workers :as main]
             [clojure.core.async :as async]))
 
-(def wait-timeout-ms 3000)
+(def wait-timeout-ms 500)
 
 (defn boot
   ([do-task-fn]
@@ -61,7 +61,7 @@
   (test/testing "interrupts handler on kill"
     (let [got-exception       (promise)
           capture-interrupted (fn [_]
-                                (try (Thread/sleep 2000)
+                                (try (Thread/sleep (* wait-timeout-ms 3))
                                      (catch InterruptedException e
                                        (deliver got-exception e))))
           {:keys [term-chan all-exited-chan]} (boot capture-interrupted)]
@@ -77,7 +77,7 @@
   (test/testing "interrupts handler that's holding up a shutdown on kill"
     (let [got-exception       (promise)
           capture-interrupted (fn [_]
-                                (try (Thread/sleep 2000)
+                                (try (Thread/sleep (* wait-timeout-ms 4))
                                      (catch InterruptedException e
                                        (deliver got-exception e))))
           {:keys [term-chan all-exited-chan]} (boot capture-interrupted)]
