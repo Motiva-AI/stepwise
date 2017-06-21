@@ -1,16 +1,22 @@
+[![CircleCI](https://circleci.com/gh/uwcpdx/stepwise/tree/master.svg?style=svg)](https://circleci.com/gh/uwcpdx/stepwise/tree/master) 
+
 ## Stepwise
 
-[![CircleCI](https://circleci.com/gh/uwcpdx/stepwise/tree/master.svg?style=svg)](https://circleci.com/gh/uwcpdx/stepwise/tree/master)
-
-Stepwise is an idiomatic Clojure library for [AWS Step Functions](https://aws.amazon.com/step-functions/). It enables you to easily develop coordination workflows for distributed systems using a minimal, data-centric API. Features:
+Stepwise is an idiomatic Clojure library for [AWS Step Functions](https://aws.amazon.com/step-functions/). Use it to implement coordination workflows for distributed systems using a minimalist, data-centric API. Features:
 
  * Lightly sugared EDN representation of the [Amazon States Language](https://states-language.net/spec.html)
  * Activity task polling and handling
  * Tooling for [rapid development via code reloading](http://thinkrelevance.com/blog/2013/06/04/clojure-workflow-reloaded)
 
-### Example
+### Basic Usage
 
-Here's a trivial machine with one state that simply adds two inputs together:
+Here's how to make a trivial state machine that just adds two inputs together. The only prerequisite is to install the [AWS CLI](https://aws.amazon.com/cli/) and run `aws configure` to set up authentication.
+
+For your dependencies:
+
+`[uwcpdx/stepwise "0.5.0"]`
+
+At the REPL:
 
 ```clojure
 (require '[stepwise.core :as stepwise])
