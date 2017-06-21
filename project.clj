@@ -1,4 +1,4 @@
-(defproject uwcpdx/stepwise "0.5.0"
+(defproject uwcpdx/stepwise "0.5.1"
   :profiles {:dev {:dependencies [[org.clojure/tools.namespace "0.2.11"]
                                   [org.clojure/clojure "1.9.0-alpha14"]
                                   [pjstadig/humane-test-output "0.8.1"]
@@ -13,7 +13,7 @@
                                    :username      :env/CLOJARS_USERNAME
                                    :password      :env/CLOJARS_PASSWORD
                                    :sign-releases false}}
-  :dependencies [[uwcpdx/bean-dip "0.7.1" :exclusions [joda-time]]
+  :dependencies [[uwcpdx/bean-dip "0.7.2" :exclusions [joda-time]]
                  [org.clojure/tools.logging "0.4.0"]
                  [org.clojure/data.json "0.2.6"]
                  [org.clojure/core.async "0.3.441"]
