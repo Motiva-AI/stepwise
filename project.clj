@@ -1,4 +1,4 @@
-(defproject uwcpdx/stepwise "0.5.3-SNAPSHOT"
+(defproject uwcpdx/stepwise "0.5.3"
   :profiles {:dev {:dependencies [[org.clojure/tools.namespace "0.2.11"]
                                   [org.clojure/clojure "1.9.0-alpha14"]
                                   [pjstadig/humane-test-output "0.8.1"]
