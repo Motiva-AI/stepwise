@@ -13,7 +13,9 @@
 
 (defn poll [activity-arn]
   (let [chan (async/chan)]
-    (future (async/>!! chan (try (not-empty (client/get-activity-task activity-arn))
+    (future (log/debug "Polling for activity task"
+                       (prn-str {:arn activity-arn}))
+            (async/>!! chan (try (client/get-activity-task activity-arn)
                                  (catch Throwable e
                                    (log/warn (prn-str e))
                                    e)))
@@ -38,7 +40,10 @@
 
 (defn handle [activity-arn task handler-fn]
   (let [chan (async/chan)]
-    [chan (future (let [result (try (if (-> handler-fn meta :heartbeat?)
+    [chan (future (log/debug "Handling activity task"
+                             {:arn  activity-arn
+                              :task task})
+                  (let [result (try (if (-> handler-fn meta :heartbeat?)
                                       (handler-fn (::mdl/input task)
                                                   #(client/send-task-heartbeat
                                                      (::mdl/task-token task)))
@@ -48,14 +53,14 @@
                       (try
                         (if (instance? Throwable result)
                           (do
-                            (log/warn result
+                            (log/info result
                                       "Activity task failed"
                                       (prn-str (maps/syms->map activity-arn task)))
                             (client/send-task-failure (::mdl/task-token task)
                                                       (exception->failure-map result)))
                           (do
-                            (log/debug "Activity task completed"
-                                       (prn-str (maps/syms->map activity-arn task result)))
+                            (log/info "Activity task completed"
+                                      (prn-str (maps/syms->map activity-arn task result)))
                             (client/send-task-success (::mdl/task-token task)
                                                       result)))
                         (catch Throwable e
@@ -90,8 +95,7 @@
            (and (instance? AmazonServiceException message)
                 (= (.getErrorCode ^AmazonServiceException message)
                    "ActivityDoesNotExist"))
-           (do (log/error message
-                          "Polling terminated for non-existent activity"
+           (do (log/error "Polling terminated for non-existent activity"
                           {:arn activity-arn})
                message)
 
@@ -104,7 +108,7 @@
                   (+ consec-poll-fail 1)
                   ::polling)
 
-           (nil? message)
+           (= message {})
            (recur (async/alts! [terminate-chan (poll activity-arn)])
                   nil
                   nil
@@ -158,6 +162,7 @@
                (boot-worker terminate-mult activity-arn handler-fn)))
         (range 0 concurrency)))
 
+; TODO check default client to ensure connection pool is big enough for all pollers
 (defn boot [activity-arn->handler-fn & [activity-arn->concurrency]]
   (let [terminate-chan (async/chan)
         terminate-mult (async/mult terminate-chan)

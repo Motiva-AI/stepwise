@@ -9,7 +9,7 @@
 
 (defn kw-entry? [node]
   (and (instance? MapEntry node)
-       (= (key node) ::mdl/resource)
+       (#{::mdl/resource :resource} (key node))
        (keyword? (val node))))
 
 (defn get-names [definition]
@@ -23,7 +23,7 @@
 (defn resolve-names [old->new definition]
   (walk/prewalk (fn [node]
                   (if (kw-entry? node)
-                    (MapEntry. ::mdl/resource (old->new (val node)))
+                    (MapEntry. (key node) (old->new (val node)))
                     node))
                 definition))
 
