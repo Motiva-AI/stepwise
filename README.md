@@ -10,7 +10,7 @@ Stepwise is an idiomatic Clojure library for [AWS Step Functions](https://aws.am
 
 ### Basic Usage
 
-Here's how to make a trivial state machine that just adds two inputs together. The only prerequisite is to install the [AWS CLI](https://aws.amazon.com/cli/) and run `aws configure` to set up authentication and region.
+Here's how to make a trivial state machine that just adds two inputs together. The only prerequisite is to install the [AWS CLI](https://aws.amazon.com/cli/) and run `aws configure` to set up your authentication and region.
 
 For your dependencies:
 
