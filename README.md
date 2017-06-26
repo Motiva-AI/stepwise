@@ -8,7 +8,7 @@ Stepwise is an idiomatic Clojure library for [AWS Step Functions](https://aws.am
  * Activity task polling and handling ready for [component](https://github.com/stuartsierra/component) (or similar)
  * Tooling for [rapid development via code reloading](http://thinkrelevance.com/blog/2013/06/04/clojure-workflow-reloaded)
 
-Our production bioinformatics pipeline is implemented using this library.
+Our production bioinformatics pipeline is implemented using this library. Still pre-1.0 and some API changes are likely.
 
 ### Basic Usage
 
