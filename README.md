@@ -2,19 +2,19 @@
 
 ## Stepwise
 
-Stepwise is an idiomatic Clojure library for [AWS Step Functions](https://aws.amazon.com/step-functions/). Use it to implement coordination workflows for distributed systems using a minimalist, data-centric API. Features:
+Stepwise is an idiomatic Clojure library for [AWS Step Functions](https://aws.amazon.com/step-functions/). Use it to coordinate processes in distributed systems with AWS handling state, branching, and retries. Features:
 
  * Lightly sugared EDN representation of the [Amazon States Language](https://states-language.net/spec.html)
- * Activity task polling and handling
+ * Activity task polling and handling ready for [component](https://github.com/stuartsierra/component) (or similar)
  * Tooling for [rapid development via code reloading](http://thinkrelevance.com/blog/2013/06/04/clojure-workflow-reloaded)
 
 ### Basic Usage
 
-Here's how to make a trivial state machine that just adds two inputs together. The only prerequisite is to install the [AWS CLI](https://aws.amazon.com/cli/) and run `aws configure` to set up authentication.
+Here's how to make a trivial state machine that just adds two inputs together. The only prerequisite is to install the [AWS CLI](https://aws.amazon.com/cli/) and run `aws configure` to set up authentication and region.
 
 For your dependencies:
 
-`[uwcpdx/stepwise "0.5.0"]`
+`[uwcpdx/stepwise "0.5.3"]`
 
 At the REPL:
 
