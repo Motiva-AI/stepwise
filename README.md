@@ -8,6 +8,8 @@ Stepwise is an idiomatic Clojure library for [AWS Step Functions](https://aws.am
  * Activity task polling and handling ready for [component](https://github.com/stuartsierra/component) (or similar)
  * Tooling for [rapid development via code reloading](http://thinkrelevance.com/blog/2013/06/04/clojure-workflow-reloaded)
 
+Our production bioinformatics pipeline is implemented using this library.
+
 ### Basic Usage
 
 Here's how to make a trivial state machine that just adds two inputs together. The only prerequisite is to install the [AWS CLI](https://aws.amazon.com/cli/) and run `aws configure` to set up your authentication and region.
