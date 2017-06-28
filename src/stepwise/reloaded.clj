@@ -34,10 +34,11 @@
   (str "%0" (count (str max-cycles-per-minute)) "d"))
 
 (defn deversion-name [nm]
-  (first (strs/split (name nm)
-                     version-delimiter-re)))
+  (when (re-find version-delimiter-re nm)
+    (first (strs/split (name nm)
+                       version-delimiter-re))))
 
-(defn version-name [version nm]
+(defn version-name [nm version]
   (keyword (namespace nm)
            (str (name nm)
                 version-delimiter
@@ -66,9 +67,10 @@
 (defn run-execution [machine-name definition task-handlers input]
   (let [machine-arns     (get-family-arns machine-name)
         version          (get-next-version machine-arns)
-        machine-name     (version-name version machine-name)
+        machine-name     (version-name machine-name version)
         activity-names   (activities/get-names definition)
         member-activity? (into #{} (map arns/make-name) activity-names)
+        ; TODO paginate
         activity-arns    (into #{}
                                (comp (filter #(member-activity? (deversion-name (::mdl/name %))))
                                      (map ::mdl/arn))
@@ -77,23 +79,19 @@
     (purge-machines machine-arns)
     (purge-activities activity-arns)
 
-    (let [activity->arn (into {}
-                              (map #(vector % (activities/ensure (version-name version %)))
-                                   (keys task-handlers)))
-          definition    (->> definition
-                             (sgr/desugar)
-                             (activities/resolve-names activity->arn))
-          _             (client/create-state-machine (arns/make-name machine-name)
-                                                     definition
-                                                     (iam/ensure-execution-role))
-          workers       (workers/boot (-> task-handlers
-                                          (sets/rename-keys activity->arn)
-                                          (activities/compile-all)))
-          result        (core/run-execution machine-name
-                                            {:input          input
-                                             :execution-name (str (UUID/randomUUID))})]
+    (let [activity->snapshot (into {}
+                                   (map #(vector % (version-name % version)))
+                                   activity-names)
+          _                  (core/create-state-machine machine-name
+                                                        (activities/resolve-names activity->snapshot
+                                                                                  definition))
+          workers            (core/start-workers (sets/rename-keys task-handlers
+                                                                   activity->snapshot))
+          result             (core/run-execution machine-name
+                                                 {:input          input
+                                                  :execution-name (str (UUID/randomUUID))})]
       (core/kill-workers workers)
       result)))
 
-; TODO clean-up function to purge all snapshot machines/activities for an env/machine name pair
+; TODO clean-up function to purge all snapshot machines/activities for a machine
 

@@ -1,16 +1,18 @@
 [![CircleCI](https://circleci.com/gh/uwcpdx/stepwise/tree/master.svg?style=svg)](https://circleci.com/gh/uwcpdx/stepwise/tree/master) 
 
-## Stepwise
+# Stepwise
 
-Stepwise is an idiomatic Clojure library for [AWS Step Functions](https://aws.amazon.com/step-functions/). Use it to coordinate asynchronous, distributed processes with AWS managing state, branching, and retries. Features:
+Stepwise is an idiomatic Clojure library for [AWS Step Functions](https://aws.amazon.com/step-functions/). Use it to coordinate asynchronous, distributed processes with AWS managing state, branching, and retries.
+
+Features:
 
  * Lightly sugared EDN representation of the [Amazon States Language](https://states-language.net/spec.html)
- * Activity task polling and handling ready for [component](https://github.com/stuartsierra/component) (or similar)
+ * Activity task polling and handling ready for [component](https://github.com/stuartsierra/component) or similar
  * Tooling for [rapid development via code reloading](http://thinkrelevance.com/blog/2013/06/04/clojure-workflow-reloaded)
 
-Our production bioinformatics pipeline is implemented using this library. Still pre-1.0 and some API changes are likely.
+Our production bioinformatics pipeline is implemented using this library. Still pre-1.0 and some minor API changes are likely.
 
-### Basic Usage
+## Basic Usage
 
 Here's how to make a trivial state machine that just adds two inputs together. The only prerequisite is to install the [AWS CLI](https://aws.amazon.com/cli/) and run `aws configure` to set up your authentication and region.
 
@@ -28,7 +30,7 @@ At the REPL:
                                 :states   {:add {:type     :task
                                                  :resource :activity/add
                                                  :end      true}}})
-=> "arn:aws:states:us-west-2:XXXXXXXXXXXX:stateMachine:adder"
+=> "arn:aws:states:us-west-2:123456789012:stateMachine:adder"
 
 (stepwise/start-workers {:activity/add (fn [{:keys [x y]}] (+ x y))})
 => ...
@@ -37,14 +39,149 @@ At the REPL:
 =>
 {:input             {:x 1 :y 1}
  :output            2
- :state-machine-arn "arn:aws:states:us-west-2:XXXXXXXXXXXX:stateMachine:adder"
+ :state-machine-arn "arn:aws:states:us-west-2:123456789012:stateMachine:adder"
  :start-date        #inst"2017-06-20T22:48:14.241-00:00"
  :stop-date         #inst"2017-06-20T22:48:14.425-00:00"
- :arn               "arn:aws:states:us-west-2:XXXXXXXXXXXX:execution:adder:9c5623c6-eee3-49fa-a7d6-22e3ca236c9a"
+ :arn               "arn:aws:states:us-west-2:123456789012:execution:adder:9c5623c6-eee3-49fa-a7d6-22e3ca236c9a"
  :status            "SUCCEEDED"
  :name              "9c5623c6-eee3-49fa-a7d6-22e3ca236c9a"}
 
 (stepwise/shutdown-workers *2)
 => #{:done}
 ```
+
+## Development Workflow
+
+Stepwise enables a rapidly cycling development workflow for Step Functions. State machine registrations are immutable, which is a virtue but does mean you need to create a new one for each minor change during development. Also, activity task polls are long and cannot be interrupted, demanding registration of new activities (or a JVM restart) to prevent stealing by stale bytecode. Stepwise provides a single function, `stepwise.reloaded/run-execution`, that uses fresh state machine and activity task registrations to run a state machine execution wherein code changes are immediately reflected.
+
+Example:
+
+```clojure
+(stepwise.reloaded/run-execution :adder
+                                 {:start-at :add
+                                  :states   {:add {:type     :task
+                                                   :resource :activity/add
+                                                   :end      true}}}
+                                 {:activity/add (fn [{:keys [x y]}] (+ x y))}
+                                 {:x 41 :y 1})
+=>
+{:output 42,
+ :state-machine-arn "arn:aws:states:us-west-2:123456789012:stateMachine:adder_SNAPSHOT002",
+ :start-date #inst"2017-06-27T19:32:23.451-00:00",
+ :stop-date #inst"2017-06-27T19:32:23.594-00:00",
+ :input {:x 41,
+         :y 1,
+         :state-machine-name "adder_SNAPSHOT002",
+         :execution-name "0ff41703-dd9f-4f88-932c-c30f3c5e707b"},
+ :arn "arn:aws:states:us-west-2:123456789012:execution:adder_SNAPSHOT002:0ff41703-dd9f-4f88-932c-c30f3c5e707b",
+ :status "SUCCEEDED",
+ :name "0ff41703-dd9f-4f88-932c-c30f3c5e707b"}
+```
+
+Naturally your state machine and handlers will not be defined inline like this, so pair this call with something like [tools.namespace](https://github.com/clojure/tools.namespace) or [Cursive](https://cursive-ide.com/)'s native code reloading to rapidly try out changes to your namespaces.
+
+## EDN States Language Representation
+
+Stepwise represents the [Amazon States Language](https://states-language.net/spec.html) as EDN.
+
+The only pervasive departure from the JSON representation is the use of lowered-hyphen keywords for keys, state names, and state types instead of CamelCase strings. The official AWS SDK validates your state machine definitions, and its exceptions are let through unmolested, so their messages are in terms of the CamelCase naming. When retrieving definitions from AWS they are translated into the EDN representation whether created with stepwise or not (state names are converted to keywords but otherwise untouched).
+
+Aside from keywords being substituted for strings, the other sugaring is on:
+
+ * Condition expressions in [choice states](https://states-language.net/spec.html#choice-state)
+ * Error matching expressions in [retry](https://states-language.net/spec.html#retrying-after-error) and [catch](fallback-states) blocks
+ * Activity task resources
+
+### Condition Expressions
+
+Condition expressions in choice states are sugared in stepwise as illustrated by the example below:
+
+```
+JSON
+----
+{
+    "Not": {
+      "Variable": "$.type",
+      "StringEquals": "Private"
+    },
+    "Next": "Public"
+}
+
+EDN
+---
+{:condition [:not [:= "$.type" "Private"]]
+ :next      :public}
+
+JSON
+----
+{
+  "And": [
+    {
+      "Variable": "$.value",
+      "NumericGreaterThanEquals": 20
+    },
+    {
+      "Variable": "$.value",
+      "NumericLessThan": 30
+    }
+  ],
+  "Next": "ValueInTwenties"
+}
+
+EDN
+---
+{:condition [:and [>= "$.value" 20]
+                  [< "$.value" 30]]
+ :next      :value-in-twenties}
+```
+
+See [src/stepwise/sugar.clj](src/stepwise/sugar.clj) and [src/stepwise/specs/sugar.clj](src/stepwise/specs/sugar.clj) for full details.
+
+### Error Matching
+
+In stepwise the `:error-equals` key that corresponds to the `ErrorEquals` key in the states language can be a keyword or collection of keywords:
+
+```
+JSON
+----
+"Retry" : [
+    {
+      "ErrorEquals": [ "States.ALL" ]
+    }
+]
+
+EDN
+---
+{:retry [{:error-equals :States.ALL}]}
+```
+
+You can of course use keywords for your custom error names, including namespaced keywords.
+
+### Activity Task Resources
+
+Activity task resources can be specified as keywords and `stepwise.core/create-state-machine` will register appropriately named activities for you and substitute in their ARNs. For example:
+
+```
+JSON
+----
+{
+  "StartAt": "Add",
+  "States": {
+    "Add": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:us-west-2:123456789012:activity:add",
+      "End": true
+    }
+  }
+}
+
+EDN
+---
+{:start-at :add
+ :states   {:add {:type     :task
+                  :resource :add
+                  :end      true}}}
+```
+
+You can also supply a string for the resource to specify a lambda task or activity task managed outside of stepwise by ARN.
 

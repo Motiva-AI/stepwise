@@ -555,7 +555,7 @@
 
 (bd/def-translation GetExecutionHistoryResult #{::next-token ::events})
 
-(bd/def-translation ActivityListItem #{::activity-arn ::name})
+(bd/def-translation ActivityListItem #{[::activity-arn ::arn] ::name})
 (bd/def-translation ListActivitiesRequest #{::max-results ::next-token})
 (bd/def-translation ListActivitiesResult #{::activities ::next-token})
 

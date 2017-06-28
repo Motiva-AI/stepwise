@@ -1,5 +1,6 @@
 (defproject uwcpdx/stepwise "0.5.4-SNAPSHOT"
-  :profiles {:dev {:dependencies [[org.clojure/tools.namespace "0.2.11"]
+  :profiles {:dev {:dependencies [[spyscope "0.1.7-SNAPSHOT"]
+                                  [org.clojure/tools.namespace "0.2.11"]
                                   [org.clojure/clojure "1.9.0-alpha14"]
                                   [pjstadig/humane-test-output "0.8.1"]
                                   [org.slf4j/slf4j-simple "1.7.25"]
@@ -7,7 +8,8 @@
                                   [alembic "0.3.2"]
                                   [org.clojure/test.check "0.9.0"]]
                    :injections   [(require 'pjstadig.humane-test-output)
-                                  (pjstadig.humane-test-output/activate!)]
+                                  (pjstadig.humane-test-output/activate!)
+                                  (require 'spyscope.core)]
                    :main         stepwise.dev-repl}}
   :deploy-repositories {"clojars" {:url           "https://clojars.org/repo"
                                    :username      :env/CLOJARS_USERNAME

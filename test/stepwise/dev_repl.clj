@@ -39,6 +39,14 @@
       (mdl/map->StateMachine)))
 
 (defn sandbox []
+  (reloaded/run-execution :adder
+                          {:start-at :add
+                           :states   {:add {:type     :task
+                                            :resource :activity/add
+                                            :end      true}}}
+                          {:activity/add (fn [{:keys [x y]}] (+ x y))}
+                          {:x 41 :y 1})
+
   #_(s/explain-data ::sgr/state-machine
                     {:start-at :my-choice
                      :states   {:my-choice {:type    :choice
@@ -117,8 +125,8 @@
                             {:sum (fn [{:keys [a b]}] (+ a b))}
                             {:a 1
                              :b 2})
-  (sgr/get-non-model-keys {:foo [{:bar :bam}]
-                           :bim {:boom          :bap
-                                 ::mdl/resource "hi"}})
+  #_(sgr/get-non-model-keys {:foo [{:bar :bam}]
+                             :bim {:boom          :bap
+                                   ::mdl/resource "hi"}})
   )
 
