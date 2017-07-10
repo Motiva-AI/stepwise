@@ -1,5 +1,6 @@
 (ns stepwise.client
-  (:require [stepwise.model :as mdl])
+  (:require [stepwise.model :as mdl]
+            [clojure.core.async :as async])
   (:import (com.amazonaws.services.stepfunctions AWSStepFunctionsClient
                                                  AWSStepFunctionsClientBuilder)
            (com.amazonaws ClientConfiguration)))
@@ -201,4 +202,43 @@
         mdl/map->StopExecutionRequest
         (.stopExecution client))
    nil))
+
+(defn auto-page' [client-fn items-key base-args xform]
+  (let [items-chan (async/chan 1 xform)
+        [base-pos-args base-map-args] (if (map? (last base-args))
+                                        [(pop base-args) (last base-args)]
+                                        [base-args {}])
+        get-page   (fn [token]
+                     (let [map-args (assoc base-map-args :next-token token)
+                           args     (conj base-pos-args map-args)]
+                       (apply client-fn args)))]
+    (async/go
+      (try (loop [page (get-page nil)]
+             (async/<! (async/onto-chan items-chan
+                                        (get page items-key)
+                                        false))
+             (when-let [next-token (::mdl/next-token page)]
+               (recur (get-page next-token))))
+           (catch Throwable e
+             (async/>! items-chan e)))
+      (async/close! items-chan))
+    items-chan))
+
+(def request-fn->items-key
+  {#'get-execution-history ::mdl/events
+   #'list-activities       ::mdl/activities
+   #'list-executions       ::mdl/executions
+   #'list-state-machines   ::mdl/state-machines})
+
+(defmacro auto-page [request-form & xform]
+  (let [request-fn-sym (first request-form)
+        request-fn-var (resolve request-fn-sym)
+        items-key      (request-fn->items-key request-fn-var)]
+    (when-not items-key
+      (throw (ex-info "Function called is not paginating"
+                      {:request-fn request-fn-var})))
+    `(auto-page' ~request-fn-sym
+                 ~items-key
+                 ~(vec (rest request-form))
+                 ~xform)))
 
