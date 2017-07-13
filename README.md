@@ -187,5 +187,5 @@ EDN
                   :end      true}}}
 ```
 
-You can also supply a string for the resource to specify a lambda task or activity task managed outside of stepwise by ARN.
+You can also supply an ARN string for the resource to specify a lambda task or activity task managed outside of stepwise.
 
