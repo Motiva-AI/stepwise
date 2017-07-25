@@ -13,7 +13,7 @@
 (def client-config
   (doto (ClientConfiguration.)
     (.setSocketTimeout 70000)
-    (.setMaxConnections 50)))
+    (.setMaxConnections 75)))
 
 (def stock-default-client
   (delay (-> (AWSStepFunctionsClientBuilder/standard)
@@ -230,7 +230,7 @@
    #'list-executions       ::mdl/executions
    #'list-state-machines   ::mdl/state-machines})
 
-(defmacro auto-page [request-form & xform]
+(defmacro auto-page [request-form & [xform]]
   (let [request-fn-sym (first request-form)
         request-fn-var (resolve request-fn-sym)
         items-key      (request-fn->items-key request-fn-var)]

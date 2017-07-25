@@ -24,8 +24,8 @@
                                  (iam/ensure-execution-role))))
 
 (defn start-execution
-  ([state-machine]
-   (start-execution state-machine nil))
+  ([state-machine-name]
+   (start-execution state-machine-name nil))
   ([state-machine-name {:keys [input execution-name]}]
    (let [input (if execution-name
                  (assoc input :state-machine-name state-machine-name
