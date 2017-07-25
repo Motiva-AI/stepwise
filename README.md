@@ -4,11 +4,15 @@
 
 Stepwise is an idiomatic Clojure library for [AWS Step Functions](https://aws.amazon.com/step-functions/). Use it to coordinate asynchronous, distributed processes with AWS managing state, branching, and retries.
 
-Features:
+Implemented Features:
 
  * Lightly sugared EDN representation of the [Amazon States Language](https://states-language.net/spec.html)
  * Activity task polling and handling ready for [component](https://github.com/stuartsierra/component) or similar
  * Tooling for [rapid development via code reloading](http://thinkrelevance.com/blog/2013/06/04/clojure-workflow-reloaded)
+
+Future Features:
+
+ * Transparent serverless deployment of activity task handlers as [AWS Lambda](https://aws.amazon.com/lambda/) functions via [portkey](https://github.com/cgrand/portkey)
 
 Our production bioinformatics pipeline is implemented using this library. Still pre-1.0 and some minor API changes are likely.
 
@@ -183,5 +187,5 @@ EDN
                   :end      true}}}
 ```
 
-You can also supply a string for the resource to specify a lambda task or activity task managed outside of stepwise by ARN.
+You can also supply an ARN string for the resource to specify a lambda task or activity task managed outside of stepwise.
 
