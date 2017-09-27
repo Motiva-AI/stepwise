@@ -23,6 +23,11 @@
                                  definition
                                  (iam/ensure-execution-role))))
 
+(defn describe-state-machine [arn]
+  (-> (client/describe-state-machine arn)
+      (update ::mdl/definition sgr/sugar)
+      (denamespace-keys)))
+
 (defn start-execution
   ([state-machine-name]
    (start-execution state-machine-name nil))
