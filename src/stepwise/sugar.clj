@@ -90,15 +90,13 @@
      (::mdl/variable attrs)
      expected-value]))
 
-(defmethod sugar* ::mdl/condition [_ [op params]]
+(defmethod sugar* ::mdl/condition [_ [op & map-or-children]]
   (condp #(%1 %2) op
-    #{::mdl/bool-eq} (::mdl/variable params)
-    #{::mdl/not} [:not (sugar* ::mdl/condition (::mdl/condition params))]
-    #{::mdl/and ::mdl/or} (into [(keyword (name op))]
-                                (map (fn [child]
-                                       (sugar* ::mdl/condition child)))
-                                (::mdl/conditions params))
-    model-comparison-ops (sugar-comparison op params)))
+    #{::mdl/bool-eq} (::mdl/variable (first map-or-children))
+    #{::mdl/not ::mdl/and ::mdl/or} (into [(keyword (name op))]
+                                          (map (partial sugar* ::mdl/condition))
+                                          map-or-children)
+    model-comparison-ops (sugar-comparison op (first map-or-children))))
 
 (defmethod desugar* ::next [_ next-state]
   {::key ::mdl/transition
@@ -188,18 +186,16 @@
    ::val retriers})
 
 (defmethod sugar* ::mdl/retriers [_ retriers]
-  (when (not-empty retriers)
-    {::key :retry
-     ::val retriers}))
+  {::key :retry
+   ::val retriers})
 
 (defmethod desugar* ::catch [_ catchers]
   {::key ::mdl/catchers
    ::val catchers})
 
 (defmethod sugar* ::mdl/catchers [_ catchers]
-  (when (not-empty catchers)
-    {::key :catch
-     ::val catchers}))
+  {::key :catch
+   ::val catchers})
 
 (defn renamespace-keys [match-key? target-ns]
   (fn [node]
@@ -214,13 +210,12 @@
     (if (and (instance? MapEntry node)
              (get-method multifn (key node)))
       (let [result (multifn (key node) (val node))]
-        (cond (and (map? result)
-                   (contains? result ::key))
-              (MapEntry. (::key result)
-                         (::val result))
-              (not (nil? result))
-              (MapEntry. (keyword target-ns (name (key node)))
-                         result)))
+        (if (and (map? result)
+                 (contains? result ::key))
+          (MapEntry. (::key result)
+                     (::val result))
+          (MapEntry. (keyword target-ns (name (key node)))
+                     result)))
       node)))
 
 (defn transform-state-name-keys [transform-fn]
