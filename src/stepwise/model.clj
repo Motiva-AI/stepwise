@@ -169,6 +169,9 @@
 
 (def-builder-translation Catcher #{::error-equals ::result-path ::transition})
 
+(defmethod bd/->map-val ::error-equals [_ error-equals]
+  (into #{} error-equals))
+
 (defmethod bd/->map-val ::transition [_ transition]
   (condp instance? transition
     NextStateTransition (.getNextStateName ^NextStateTransition transition)
