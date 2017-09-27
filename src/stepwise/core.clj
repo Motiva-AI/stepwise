@@ -18,15 +18,21 @@
 (defn create-state-machine [name definition]
   (let [definition         (sgr/desugar definition)
         activity-name->arn (activities/ensure-all (activities/get-names definition))
-        definition         (activities/resolve-names activity-name->arn definition)]
+        definition         (activities/resolve-kw-resources activity-name->arn definition)]
     (client/create-state-machine (arns/make-name name)
                                  definition
                                  (iam/ensure-execution-role))))
 
-(defn describe-state-machine [arn]
-  (-> (client/describe-state-machine arn)
-      (update ::mdl/definition sgr/sugar)
+(defn describe-execution [arn]
+  (-> (client/describe-execution arn)
       (denamespace-keys)))
+
+(defn describe-state-machine [arn]
+  (->> (update (client/describe-state-machine arn)
+               ::mdl/definition
+               sgr/sugar)
+       (activities/resolve-resources arns/resource-arn->kw)
+       (denamespace-keys)))
 
 (defn start-execution
   ([state-machine-name]

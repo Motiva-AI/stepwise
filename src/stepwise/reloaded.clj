@@ -83,8 +83,8 @@
                                    (map #(vector % (version-name % version)))
                                    activity-names)
           _                  (core/create-state-machine machine-name
-                                                        (activities/resolve-names activity->snapshot
-                                                                                  definition))
+                                                        (activities/resolve-kw-resources activity->snapshot
+                                                                                         definition))
           workers            (core/start-workers (sets/rename-keys task-handlers
                                                                    activity->snapshot))
           result             (core/run-execution machine-name

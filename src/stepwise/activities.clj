@@ -7,25 +7,32 @@
             [stepwise.client :as client])
   (:import (clojure.lang MapEntry)))
 
-(defn kw-entry? [node]
+(defn resource-entry? [node]
   (and (instance? MapEntry node)
-       (#{::mdl/resource :resource} (key node))
-       (keyword? (val node))))
+       (#{::mdl/resource :resource} (key node))))
 
 (defn get-names [definition]
   (into #{}
-        (comp (filter kw-entry?)
+        (comp (filter resource-entry?)
+              (filter #(keyword? (val %)))
               (map val))
         (tree-seq #(or (map? %) (vector? %))
                   identity
                   definition)))
 
-(defn resolve-names [old->new definition]
+(defn resolve-resources [old->new definition]
   (walk/prewalk (fn [node]
-                  (if (kw-entry? node)
+                  (if (resource-entry? node)
                     (MapEntry. (key node) (old->new (val node)))
                     node))
                 definition))
+
+(defn resolve-kw-resources [old->new definition]
+  (resolve-resources (fn [resource-name]
+                       (if (keyword? resource-name)
+                         (old->new resource-name)
+                         resource-name))
+                     definition))
 
 (defn ensure [kw-name]
   (client/create-activity (arns/make-name kw-name)))

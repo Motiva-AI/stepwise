@@ -1,5 +1,6 @@
 (ns stepwise.arns
-  (:require [stepwise.serialization :as ser])
+  (:require [stepwise.serialization :as ser]
+            [clojure.string :as strs])
   (:import (com.amazonaws.regions DefaultAwsRegionProviderChain)
            (com.amazonaws.services.securitytoken AWSSecurityTokenServiceClientBuilder)
            (com.amazonaws.services.securitytoken.model GetCallerIdentityRequest)))
@@ -34,4 +35,9 @@
 
 (defn get-role-arn [path role-name]
   (str "arn:aws:iam::" @account-number ":role" path role-name))
+
+(defn resource-arn->kw [arn]
+  (-> (strs/split arn #":")
+      (last)
+      (ser/deser-keyword-name)))
 

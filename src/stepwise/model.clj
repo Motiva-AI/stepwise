@@ -475,6 +475,8 @@
                                                  ::next-token
                                                  ::reverse-order?})
 
+; TODO state names in event details should be made keywords
+
 (bd/def-translation ActivityFailedEventDetails #{::error ::cause})
 (bd/def-translation ActivityScheduleFailedEventDetails #{::error ::cause})
 (bd/def-translation ActivityScheduledEventDetails #{::resource
