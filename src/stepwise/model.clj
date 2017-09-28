@@ -251,17 +251,8 @@
    ::ts-lt       map->TimestampLessThanCondition$Builder
    ::ts-lte      map->TimestampLessThanOrEqualCondition$Builder})
 
-(def non-compound?
-  (-> (keys condition-kw->map->Bean)
-      set
-      (disj ::and ::or ::not)))
-
-(defn tuple->Condition [[condition & attrs-or-children]]
-  (let [map->Bean (condition-kw->map->Bean condition)]
-    (condp contains? condition
-      #{::and ::or} (map->Bean {::conditions attrs-or-children})
-      #{::not} (map->Bean {::condition (first attrs-or-children)})
-      non-compound? (map->Bean (first attrs-or-children)))))
+(defn tuple->Condition [[condition attrs]]
+  ((condition-kw->map->Bean condition) attrs))
 
 (defmethod bd/->bean-val ::condition [_ condition]
   (tuple->Condition condition))

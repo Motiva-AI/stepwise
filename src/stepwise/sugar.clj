@@ -58,9 +58,11 @@
   (condp #(%1 %2) (first condition)
     char? [::mdl/bool-eq {::mdl/variable               condition
                           ::mdl/expected-value-boolean true}]
-    #{:and :or :not} (into [(model-keyword (first condition))]
-                           (map (partial desugar* ::condition))
-                           (rest condition))
+    #{:not} [::mdl/not {::mdl/condition (desugar* ::condition (last condition))}]
+    #{:and :or} [(model-keyword (first condition))
+                 {::mdl/conditions (into []
+                                         (map (partial desugar* ::condition))
+                                         (rest condition))}]
     #{:= :> :>= :< :<=} (desugar-comparison condition)))
 
 (def str->op
@@ -91,13 +93,14 @@
      expected-value]))
 
 ; TODO round trips within stepwise, but when going all the way through the AWS SDK and back doesn't!
-(defmethod sugar* ::mdl/condition [_ [op & map-or-children]]
+(defmethod sugar* ::mdl/condition [_ [op params]]
   (condp #(%1 %2) op
-    #{::mdl/bool-eq} (::mdl/variable (first map-or-children))
-    #{::mdl/not ::mdl/and ::mdl/or} (into [(keyword (name op))]
-                                          (map (partial sugar* ::mdl/condition))
-                                          map-or-children)
-    model-comparison-ops (sugar-comparison op (first map-or-children))))
+    #{::mdl/bool-eq} (::mdl/variable params)
+    #{::mdl/not} [:not (sugar* ::mdl/condition (::mdl/condition params))]
+    #{::mdl/and ::mdl/or} (into [(keyword (name op))]
+                                (map (partial sugar* ::mdl/condition))
+                                (::mdl/conditions params))
+    model-comparison-ops (sugar-comparison op params)))
 
 (defmethod desugar* ::next [_ next-state]
   {::key ::mdl/transition
