@@ -92,7 +92,6 @@
      (::mdl/variable attrs)
      expected-value]))
 
-; TODO round trips within stepwise, but when going all the way through the AWS SDK and back doesn't!
 (defmethod sugar* ::mdl/condition [_ [op params]]
   (condp #(%1 %2) op
     #{::mdl/bool-eq} (::mdl/variable params)

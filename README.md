@@ -13,6 +13,7 @@ Implemented Features:
 Future Features:
 
  * Transparent serverless deployment of activity task handlers as [AWS Lambda](https://aws.amazon.com/lambda/) functions via [portkey](https://github.com/cgrand/portkey)
+ * Support for [test.check](https://github.com/clojure/test.check) validation of state machine definitions via emulation of the Step Functions backend
 
 Our production bioinformatics pipeline is implemented using this library. Still pre-1.0 and some minor API changes are likely.
 
