@@ -167,6 +167,9 @@
 (defmethod bd/builder-override [Catcher ::error-equals] [_ ^Catcher$Builder builder error-equals]
   (.errorEquals builder (into-array String (map name error-equals))))
 
+(defmethod bd/builder-override [Catcher ::result-path] [_ ^Catcher$Builder builder ^String input-path]
+  (.resultPath builder input-path))
+
 (def-builder-translation Catcher #{::error-equals ::result-path ::transition})
 
 (defmethod bd/->map-val ::error-equals [_ error-equals]
@@ -293,6 +296,12 @@
 (defmethod bd/builder-override [ChoiceState ::choices] [_ ^ChoiceState$Builder builder choices]
   (doseq [choice choices]
     (.choice builder (map->Choice$Builder choice))))
+
+(defmethod bd/builder-override [ChoiceState ::input-path] [_ ^ChoiceState$Builder builder ^String input-path]
+  (.inputPath builder input-path))
+
+(defmethod bd/builder-override [ChoiceState ::output-path] [_ ^ChoiceState$Builder builder ^String output-path]
+  (.outputPath builder output-path))
 
 (def-builder-translation ChoiceState
                          #{::choices ::comment ::default-state-name ::input-path ::output-path

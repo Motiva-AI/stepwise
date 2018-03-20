@@ -19,7 +19,7 @@
                  [org.clojure/tools.logging "0.4.0"]
                  [org.clojure/data.json "0.2.6"]
                  [org.clojure/core.async "0.4.474"]
-                 [com.amazonaws/aws-java-sdk-iam "1.11.130"]
-                 [com.amazonaws/aws-java-sdk-sts "1.11.130"]
-                 [com.amazonaws/aws-java-sdk-stepfunctions "1.11.130"]])
+                 [com.amazonaws/aws-java-sdk-iam "1.11.230"]
+                 [com.amazonaws/aws-java-sdk-sts "1.11.230"]
+                 [com.amazonaws/aws-java-sdk-stepfunctions "1.11.230"]])
 
