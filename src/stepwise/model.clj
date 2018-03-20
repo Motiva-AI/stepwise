@@ -305,9 +305,24 @@
 (defmethod bd/builder-override [PassState ::transition] [_ ^PassState$Builder builder transition]
   (.transition builder (map->Transition transition)))
 
+(defmethod bd/builder-override [PassState ::input-path] [_ ^PassState$Builder builder ^String input-path]
+  (.inputPath builder input-path))
+
+(defmethod bd/builder-override [PassState ::result-path] [_ ^PassState$Builder builder ^String result-path]
+  (.resultPath builder result-path))
+
+(defmethod bd/builder-override [PassState ::output-path] [_ ^PassState$Builder builder ^String output-path]
+  (.outputPath builder output-path))
+
 (def-builder-translation PassState
                          #{::comment ::input-path ::output-path [::result String] ::result-path
                            ::transition})
+
+(defmethod bd/builder-override [SucceedState ::input-path] [_ ^SucceedState$Builder builder ^String input-path]
+  (.inputPath builder input-path))
+
+(defmethod bd/builder-override [SucceedState ::output-path] [_ ^SucceedState$Builder builder ^String output-path]
+  (.outputPath builder output-path))
 
 (def-builder-translation SucceedState
                          #{::comment ::input-path ::output-path ::terminal-state?}
@@ -330,12 +345,27 @@
 (defmethod bd/->bean-val ::heartbeat-seconds [_ heartbeat-seconds]
   (int heartbeat-seconds))
 
+(defmethod bd/builder-override [TaskState ::output-path] [_ ^TaskState$Builder builder ^String output-path]
+  (.outputPath builder output-path))
+
+(defmethod bd/builder-override [TaskState ::result-path] [_ ^TaskState$Builder builder ^String result-path]
+  (.resultPath builder result-path))
+
+(defmethod bd/builder-override [TaskState ::input-path] [_ ^TaskState$Builder builder ^String input-path]
+  (.inputPath builder input-path))
+
 (def-builder-translation TaskState
                          #{::catchers ::comment ::heartbeat-seconds ::input-path ::output-path
                            ::resource ::result-path ::retriers ::timeout-seconds ::transition})
 
 (defmethod bd/builder-override [WaitState ::transition] [_ ^WaitState$Builder builder transition]
   (.transition builder (map->Transition transition)))
+
+(defmethod bd/builder-override [WaitState ::input-path] [_ ^WaitState$Builder builder ^String input-path]
+  (.inputPath builder input-path))
+
+(defmethod bd/builder-override [WaitState ::output-path] [_ ^WaitState$Builder builder ^String output-path]
+  (.outputPath builder output-path))
 
 (def-builder-translation WaitState
                          #{::comment ::input-path ::output-path ::transition ::wait-for})
@@ -368,6 +398,15 @@
 
 (defmethod bd/builder-override [ParallelState ::transition] [_ ^ParallelState$Builder builder transition]
   (.transition builder (map->Transition transition)))
+
+(defmethod bd/builder-override [ParallelState ::output-path] [_ ^ParallelState$Builder builder ^String output-path]
+  (.outputPath builder output-path))
+
+(defmethod bd/builder-override [ParallelState ::input-path] [_ ^ParallelState$Builder builder ^String input-path]
+  (.inputPath builder input-path))
+
+(defmethod bd/builder-override [ParallelState ::result-path] [_ ^ParallelState$Builder builder ^String result-path]
+  (.resultPath builder result-path))
 
 (def-builder-translation ParallelState
                          #{::branches ::catchers ::comment ::input-path ::output-path ::result-path
