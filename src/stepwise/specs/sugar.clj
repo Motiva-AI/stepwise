@@ -1,9 +1,9 @@
 (ns stepwise.specs.sugar
-  (:require [clojure.spec :as s]
+  (:require [clojure.spec.alpha :as s]
             [stepwise.model :as mdl]
             [stepwise.specs.model]
             [stepwise.sugar :as sgr]
-            [clojure.spec.gen :as gen]
+            [clojure.spec.gen.alpha :as gen]
             [clojure.walk :as walk])
   (:import (java.util Date)
            (clojure.lang LazySeq)))

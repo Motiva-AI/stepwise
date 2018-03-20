@@ -3,15 +3,15 @@
             [stepwise.sugar :as sgr]
             [stepwise.reloaded :as reloaded]
             [stepwise.core :as core]
-            [clojure.spec.gen :as sgen]
+            [clojure.spec.gen.alpha :as sgen]
             [clojure.repl :refer :all]
             [stepwise.specs.sugar :as sgrs]
-            [alembic.still :refer [lein load-project]]
+            #_[alembic.still :refer [lein load-project]]
             [clojure.tools.namespace.repl :as ctn]
             [clojure.walk :as walk]
             [stepwise.specs.model]
             [stepwise.client :as client]
-            [clojure.spec :as s]
+            [clojure.spec.alpha :as s]
             [clojure.test.check.generators :as gen]))
 
 (defn go [])

@@ -1,7 +1,7 @@
 (ns stepwise.specs.model
   (:require [stepwise.model :as mdl]
-            [clojure.spec :as s]
-            [clojure.spec.gen :as gen]))
+            [clojure.spec.alpha :as s]
+            [clojure.spec.gen.alpha :as gen]))
 
 (s/def ::json-path (s/and string? not-empty))
 (s/def ::mdl/reference-path ::json-path)
