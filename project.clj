@@ -15,7 +15,7 @@
                                    :username      :env/CLOJARS_USERNAME
                                    :password      :env/CLOJARS_PASSWORD
                                    :sign-releases false}}
-  :dependencies [[uwcpdx/bean-dip "0.7.2" :exclusions [joda-time]]
+  :dependencies [[uwcpdx/bean-dip "0.7.3-SNAPSHOT" :exclusions [joda-time]]
                  [org.clojure/tools.logging "0.4.0"]
                  [org.clojure/data.json "0.2.6"]
                  [org.clojure/core.async "0.4.474"]
