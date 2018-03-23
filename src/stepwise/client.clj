@@ -3,7 +3,8 @@
             [clojure.core.async :as async])
   (:import (com.amazonaws.services.stepfunctions AWSStepFunctionsClient
                                                  AWSStepFunctionsClientBuilder)
-           (com.amazonaws ClientConfiguration)))
+           (com.amazonaws ClientConfiguration)
+           (com.amazonaws.services.stepfunctions.builder StateMachine)))
 
 (set! *warn-on-reflection* true)
 
@@ -58,6 +59,18 @@
         (.createStateMachine client)
         mdl/CreateStateMachineResult->map
         ::mdl/arn)))
+
+(defn update-state-machine
+  ([arn definition role-arn]
+   (update-state-machine (get-default-client) arn definition role-arn))
+  ([^AWSStepFunctionsClient client arn definition role-arn]
+   (->> {:arn        arn
+         :definition (.toPrettyJson ^StateMachine (mdl/map->StateMachine definition))
+         :role-arn   role-arn}
+        mdl/map->UpdateStateMachineRequest
+        (.updateStateMachine client)
+        mdl/UpdateStateMachineResult->map
+        ::mdl/update-date)))
 
 (defn delete-activity
   ([arn] (delete-activity (get-default-client) arn))

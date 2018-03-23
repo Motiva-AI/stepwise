@@ -46,7 +46,9 @@
                                                        StartExecutionRequest
                                                        StopExecutionRequest
                                                        StartExecutionResult
-                                                       SendTaskSuccessRequest)
+                                                       SendTaskSuccessRequest
+                                                       UpdateStateMachineRequest
+                                                       UpdateStateMachineResult)
            (com.amazonaws.services.stepfunctions.builder StateMachine StateMachine$Builder)
            (com.amazonaws.services.stepfunctions.builder.states ChoiceState FailState ParallelState
                                                                 PassState SucceedState TaskState
@@ -458,11 +460,13 @@
 (bd/def-translation CreateActivityResult #{[:activity-arn ::arn] ::creation-date})
 
 (bd/def-translation CreateStateMachineRequest #{::name [::definition StateMachine] ::role-arn})
+(bd/def-translation UpdateStateMachineRequest #{[:state-machine-arn ::arn] :definition ::role-arn})
 
 (defmethod bd/->bean-val ::definition [_ definition]
   (map->StateMachine definition))
 
 (bd/def-translation CreateStateMachineResult #{[:state-machine-arn ::arn] ::creation-date})
+(bd/def-translation UpdateStateMachineResult #{::update-date})
 (bd/def-translation DeleteActivityRequest #{[:activity-arn ::arn]})
 (bd/def-translation DeleteStateMachineRequest #{[:state-machine-arn ::arn]})
 (bd/def-translation DescribeActivityRequest #{[:activity-arn ::arn]})
