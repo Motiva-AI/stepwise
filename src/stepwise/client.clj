@@ -64,13 +64,14 @@
   ([arn definition role-arn]
    (update-state-machine (get-default-client) arn definition role-arn))
   ([^AWSStepFunctionsClient client arn definition role-arn]
-   (->> {:arn        arn
-         :definition (.toPrettyJson ^StateMachine (mdl/map->StateMachine definition))
-         :role-arn   role-arn}
-        mdl/map->UpdateStateMachineRequest
-        (.updateStateMachine client)
-        mdl/UpdateStateMachineResult->map
-        ::mdl/update-date)))
+   (do (->> #::mdl {:arn             arn
+                    :definition-json (.toPrettyJson ^StateMachine
+                                                    (mdl/map->StateMachine definition))
+                    :role-arn        role-arn}
+            mdl/map->UpdateStateMachineRequest
+            (.updateStateMachine client)
+            mdl/UpdateStateMachineResult->map)
+       arn)))
 
 (defn delete-activity
   ([arn] (delete-activity (get-default-client) arn))

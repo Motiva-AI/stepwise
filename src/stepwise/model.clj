@@ -169,10 +169,7 @@
 (defmethod bd/builder-override [Catcher ::error-equals] [_ ^Catcher$Builder builder error-equals]
   (.errorEquals builder (into-array String (map name error-equals))))
 
-(defmethod bd/builder-override [Catcher ::result-path] [_ ^Catcher$Builder builder ^String input-path]
-  (.resultPath builder input-path))
-
-(def-builder-translation Catcher #{::error-equals ::result-path ::transition})
+(def-builder-translation Catcher #{::error-equals [::result-path String] ::transition})
 
 (defmethod bd/->map-val ::error-equals [_ error-equals]
   (into #{} error-equals))
@@ -306,8 +303,8 @@
   (.outputPath builder output-path))
 
 (def-builder-translation ChoiceState
-                         #{::choices ::comment ::default-state-name ::input-path ::output-path
-                           ::terminal-state?}
+                         #{::choices ::comment ::default-state-name [::input-path String]
+                           [::output-path String] ::terminal-state?}
                          ::terminal-state?)
 
 (def-builder-translation FailState #{::cause ::comment ::error})
@@ -316,27 +313,12 @@
 (defmethod bd/builder-override [PassState ::transition] [_ ^PassState$Builder builder transition]
   (.transition builder (map->Transition transition)))
 
-(defmethod bd/builder-override [PassState ::input-path] [_ ^PassState$Builder builder ^String input-path]
-  (.inputPath builder input-path))
-
-(defmethod bd/builder-override [PassState ::result-path] [_ ^PassState$Builder builder ^String result-path]
-  (.resultPath builder result-path))
-
-(defmethod bd/builder-override [PassState ::output-path] [_ ^PassState$Builder builder ^String output-path]
-  (.outputPath builder output-path))
-
 (def-builder-translation PassState
-                         #{::comment ::input-path ::output-path [::result String] ::result-path
-                           ::transition})
-
-(defmethod bd/builder-override [SucceedState ::input-path] [_ ^SucceedState$Builder builder ^String input-path]
-  (.inputPath builder input-path))
-
-(defmethod bd/builder-override [SucceedState ::output-path] [_ ^SucceedState$Builder builder ^String output-path]
-  (.outputPath builder output-path))
+                         #{::comment [::input-path String] [::output-path String] [::result String]
+                           [::result-path String] ::transition})
 
 (def-builder-translation SucceedState
-                         #{::comment ::input-path ::output-path ::terminal-state?}
+                         #{::comment [::input-path String] [::output-path String] ::terminal-state?}
                          ::terminal-state?)
 
 (defmethod bd/builder-override [TaskState ::transition] [_ ^TaskState$Builder builder transition]
@@ -356,30 +338,17 @@
 (defmethod bd/->bean-val ::heartbeat-seconds [_ heartbeat-seconds]
   (int heartbeat-seconds))
 
-(defmethod bd/builder-override [TaskState ::output-path] [_ ^TaskState$Builder builder ^String output-path]
-  (.outputPath builder output-path))
-
-(defmethod bd/builder-override [TaskState ::result-path] [_ ^TaskState$Builder builder ^String result-path]
-  (.resultPath builder result-path))
-
-(defmethod bd/builder-override [TaskState ::input-path] [_ ^TaskState$Builder builder ^String input-path]
-  (.inputPath builder input-path))
-
 (def-builder-translation TaskState
-                         #{::catchers ::comment ::heartbeat-seconds ::input-path ::output-path
-                           ::resource ::result-path ::retriers ::timeout-seconds ::transition})
+                         #{::catchers ::comment ::heartbeat-seconds [::input-path String]
+                           [::output-path String] [::result-path String] ::resource ::retriers
+                           ::timeout-seconds ::transition})
 
 (defmethod bd/builder-override [WaitState ::transition] [_ ^WaitState$Builder builder transition]
   (.transition builder (map->Transition transition)))
 
-(defmethod bd/builder-override [WaitState ::input-path] [_ ^WaitState$Builder builder ^String input-path]
-  (.inputPath builder input-path))
-
-(defmethod bd/builder-override [WaitState ::output-path] [_ ^WaitState$Builder builder ^String output-path]
-  (.outputPath builder output-path))
-
 (def-builder-translation WaitState
-                         #{::comment ::input-path ::output-path ::transition ::wait-for})
+                         #{::comment [::input-path String] [::output-path String] ::transition
+                           ::wait-for})
 
 (declare state-kw->map->Bean)
 
@@ -410,18 +379,9 @@
 (defmethod bd/builder-override [ParallelState ::transition] [_ ^ParallelState$Builder builder transition]
   (.transition builder (map->Transition transition)))
 
-(defmethod bd/builder-override [ParallelState ::output-path] [_ ^ParallelState$Builder builder ^String output-path]
-  (.outputPath builder output-path))
-
-(defmethod bd/builder-override [ParallelState ::input-path] [_ ^ParallelState$Builder builder ^String input-path]
-  (.inputPath builder input-path))
-
-(defmethod bd/builder-override [ParallelState ::result-path] [_ ^ParallelState$Builder builder ^String result-path]
-  (.resultPath builder result-path))
-
 (def-builder-translation ParallelState
-                         #{::branches ::catchers ::comment ::input-path ::output-path ::result-path
-                           ::retriers ::transition})
+                         #{::branches ::catchers ::comment [::input-path String]
+                           [::output-path String] [::result-path String] ::retriers ::transition})
 
 (def state-kw->map->Bean
   {::choice   map->ChoiceState$Builder
@@ -460,7 +420,9 @@
 (bd/def-translation CreateActivityResult #{[:activity-arn ::arn] ::creation-date})
 
 (bd/def-translation CreateStateMachineRequest #{::name [::definition StateMachine] ::role-arn})
-(bd/def-translation UpdateStateMachineRequest #{[:state-machine-arn ::arn] :definition ::role-arn})
+(bd/def-translation UpdateStateMachineRequest #{[:state-machine-arn ::arn]
+                                                [:definition ::definition-json]
+                                                ::role-arn})
 
 (defmethod bd/->bean-val ::definition [_ definition]
   (map->StateMachine definition))

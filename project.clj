@@ -1,10 +1,11 @@
-(defproject uwcpdx/stepwise "0.5.8-SNAPSHOT"
+(defproject uwcpdx/stepwise "0.5.8"
   :profiles {:dev {:dependencies [[org.clojure/tools.namespace "0.2.11"]
                                   [org.clojure/clojure "1.9.0"]
                                   [org.clojure/spec.alpha "0.1.143"]
                                   [pjstadig/humane-test-output "0.8.1"]
                                   [org.slf4j/slf4j-simple "1.7.25"]
                                   [com.gfredericks/test.chuck "0.2.7"]
+                                  [org.clojure/clojure "1.9.0"]
                                   ; TODO pending jdk 9 compat https://github.com/pallet/alembic/pull/16
                                   #_[alembic "0.3.2"]
                                   [org.clojure/test.check "0.9.0"]]
@@ -15,7 +16,7 @@
                                    :username      :env/CLOJARS_USERNAME
                                    :password      :env/CLOJARS_PASSWORD
                                    :sign-releases false}}
-  :dependencies [[uwcpdx/bean-dip "0.7.4" :exclusions [joda-time]]
+  :dependencies [[uwcpdx/bean-dip "0.7.5"]
                  [org.clojure/tools.logging "0.4.0"]
                  [org.clojure/data.json "0.2.6"]
                  [org.clojure/core.async "0.4.474"]

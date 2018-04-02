@@ -30,7 +30,7 @@ At the REPL:
 ```clojure
 (require '[stepwise.core :as stepwise])
 
-(stepwise/create-state-machine :adder
+(stepwise/ensure-state-machine :adder
                                {:start-at :add
                                 :states   {:add {:type     :task
                                                  :resource :activity/add
@@ -57,7 +57,7 @@ At the REPL:
 
 ## Development Workflow
 
-Stepwise enables a rapidly cycling development workflow for Step Functions. State machine registrations are immutable, which is a virtue but does mean you need to create a new one for each minor change during development. Also, activity task polls are long and cannot be interrupted, demanding registration of new activities (or a JVM restart) to prevent stealing by stale bytecode. Stepwise provides a single function, `stepwise.reloaded/run-execution`, that uses fresh state machine and activity task registrations to run a state machine execution wherein code changes are immediately reflected.
+Stepwise enables a rapidly cycling development workflow for Step Functions. State machine definition updates are eventually consistent, so new state machines need to be created on each cycle during development. Also, activity task polls are long and cannot be interrupted, demanding registration of new activities (or a JVM restart) to prevent stealing by stale bytecode. Stepwise provides a single function, `stepwise.reloaded/run-execution`, that uses fresh state machine and activity task registrations to run a state machine execution wherein code changes are immediately reflected.
 
 Example:
 
@@ -71,16 +71,16 @@ Example:
                                  {:x 41 :y 1})
 =>
 {:output 42,
- :state-machine-arn "arn:aws:states:us-west-2:123456789012:stateMachine:adder_SNAPSHOT002",
- :start-date #inst"2017-06-27T19:32:23.451-00:00",
- :stop-date #inst"2017-06-27T19:32:23.594-00:00",
+ :state-machine-arn "arn:aws:states:us-west-2:256212633204:stateMachine:adder-1522697821734",
+ :start-date #inst"2018-04-02T19:37:02.061-00:00",
+ :stop-date #inst"2018-04-02T19:37:02.183-00:00",
  :input {:x 41,
          :y 1,
-         :state-machine-name "adder_SNAPSHOT002",
-         :execution-name "0ff41703-dd9f-4f88-932c-c30f3c5e707b"},
- :arn "arn:aws:states:us-west-2:123456789012:execution:adder_SNAPSHOT002:0ff41703-dd9f-4f88-932c-c30f3c5e707b",
+         :state-machine-name "adder-1522697821734",
+         :execution-name "93f1d268-b2ff-4261-bf53-8ff92d7bc2c2"},
+ :arn "arn:aws:states:us-west-2:256212633204:execution:adder-1522697821734:93f1d268-b2ff-4261-bf53-8ff92d7bc2c2",
  :status "SUCCEEDED",
- :name "0ff41703-dd9f-4f88-932c-c30f3c5e707b"}
+ :name "93f1d268-b2ff-4261-bf53-8ff92d7bc2c2"}
 ```
 
 Naturally your state machine and handlers will not be defined inline like this, so pair this call with something like [tools.namespace](https://github.com/clojure/tools.namespace) or [Cursive](https://cursive-ide.com/)'s native code reloading to rapidly try out changes to your namespaces.
@@ -164,7 +164,7 @@ You can of course use keywords for your custom error names, including namespaced
 
 ### Activity Task Resources
 
-Activity task resources can be specified as keywords and `stepwise.core/create-state-machine` will register appropriately named activities for you and substitute in their ARNs. For example:
+Activity task resources can be specified as keywords and `stepwise.core/ensure-state-machine` will register appropriately named activities for you and substitute in their ARNs. For example:
 
 ```
 JSON

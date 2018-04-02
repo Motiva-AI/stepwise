@@ -9,19 +9,24 @@
             [clojure.set :as sets]
             [clojure.core.async :as async]
             [clojure.tools.logging :as log]
-            [clojure.walk :as walk]))
+            [clojure.walk :as walk])
+  (:import (com.amazonaws.services.stepfunctions.model StateMachineAlreadyExistsException)))
 
 (defn denamespace-keys [response]
   (walk/prewalk (sgr/renamespace-keys (constantly true) nil)
                 response))
 
-(defn create-state-machine [name definition]
+(defn ensure-state-machine [name definition]
   (let [definition         (sgr/desugar definition)
         activity-name->arn (activities/ensure-all (activities/get-names definition))
-        definition         (activities/resolve-kw-resources activity-name->arn definition)]
-    (client/create-state-machine (arns/make-name name)
-                                 definition
-                                 (iam/ensure-execution-role))))
+        definition         (activities/resolve-kw-resources activity-name->arn definition)
+        name-ser           (arns/make-name name)
+        arn                (arns/get-state-machine-arn name-ser)
+        execution-role     (iam/ensure-execution-role)]
+    (try
+      (client/create-state-machine name-ser definition execution-role)
+      (catch StateMachineAlreadyExistsException _
+        (client/update-state-machine arn definition execution-role)))))
 
 (defn describe-execution [arn]
   (-> (client/describe-execution arn)
@@ -73,7 +78,7 @@
                              (map (fn [activity-name]
                                     [activity-name (arns/get-activity-arn activity-name)]))
                              (keys task-handlers))
-         ; was tripping call throttles
+         ; TODO was tripping call throttles
          #_(activities/ensure-all (keys task-handlers))]
      (workers/boot (-> task-handlers
                        (sets/rename-keys activity->arn)

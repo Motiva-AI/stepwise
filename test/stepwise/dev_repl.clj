@@ -92,7 +92,7 @@
           machine-id  (keyword "dev-repl" rand-ns)
           activity-kw (keyword "dev-repl" rand-ns)
           workers     (core/start-workers namespace {activity-kw (fn [{:keys [a b]}] (throw (ex-info "hi" {:error :blamo})))})]
-      (core/create-state-machine namespace
+      (core/ensure-state-machine namespace
                                  machine-id
                                  {:start-at :foo
                                   :states   {:foo {:type            :task
