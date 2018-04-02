@@ -23,7 +23,7 @@ Here's how to make a trivial state machine that just adds two inputs together. T
 
 For your dependencies:
 
-`[uwcpdx/stepwise "0.5.3"]`
+`[uwcpdx/stepwise "0.5.8"]`
 
 At the REPL:
 
