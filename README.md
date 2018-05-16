@@ -7,7 +7,7 @@ Stepwise is an idiomatic Clojure library for [AWS Step Functions](https://aws.am
 Implemented Features:
 
  * Validated EDN representation of the [Amazon States Language](https://states-language.net/spec.html)
- * Activity task polling and handling ready for [component](https://github.com/stuartsierra/component) or similar
+ * Activity task polling and handling ready for [component](https://github.com/stuartsierra/component), [integrant](https://github.com/weavejester/integrant), or similar.
  * Tooling for [rapid development via code reloading](http://thinkrelevance.com/blog/2013/06/04/clojure-workflow-reloaded)
 
 Future Features:

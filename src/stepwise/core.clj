@@ -43,12 +43,14 @@
   ([state-machine-name]
    (start-execution state-machine-name nil))
   ([state-machine-name {:keys [input execution-name]}]
+   ; TODO always include these(?)
    (let [input (if execution-name
                  (assoc input :state-machine-name state-machine-name
                               :execution-name execution-name)
                  input)]
      (client/start-execution (arns/get-state-machine-arn state-machine-name)
                              {:input input
+                              ; TODO nil execution-name here causes step functions to gen one?
                               :name  execution-name}))))
 
 (defn await-execution [execution-arn]
