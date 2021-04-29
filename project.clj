@@ -1,4 +1,4 @@
-(defproject uwcpdx/stepwise "0.5.9-SNAPSHOT"
+(defproject motiva/stepwise "0.6.0-SNAPSHOT"
   :profiles {:dev {:dependencies [[org.clojure/tools.namespace "1.1.0"]
                                   [org.clojure/clojure "1.10.3"]
                                   [org.clojure/spec.alpha "0.2.194"]
@@ -12,10 +12,12 @@
                    :injections   [(require 'pjstadig.humane-test-output)
                                   (pjstadig.humane-test-output/activate!)]
                    :main         stepwise.dev-repl}}
+
   :deploy-repositories {"clojars" {:url           "https://clojars.org/repo"
-                                   :username      :env/CLOJARS_USERNAME
-                                   :password      :env/CLOJARS_PASSWORD
+                                   :username      "motiva-ai"
+                                   :password      :env
                                    :sign-releases false}}
+
   :dependencies [[uwcpdx/bean-dip "0.7.6"]
                  [org.clojure/tools.logging "1.1.0"]
                  [org.clojure/data.json "2.2.2"]
