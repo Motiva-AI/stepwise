@@ -1,4 +1,4 @@
-[![CircleCI](https://circleci.com/gh/uwcpdx/stepwise/tree/master.svg?style=svg)](https://circleci.com/gh/uwcpdx/stepwise/tree/master) 
+[![CircleCI](https://circleci.com/gh/Motiva-AI/stepwise/tree/master.svg?style=svg)](https://circleci.com/gh/Motiva-AI/stepwise/tree/master)
 
 # Stepwise
 
@@ -23,7 +23,7 @@ Here's how to make a trivial state machine that just adds two inputs together. T
 
 For your dependencies:
 
-`[uwcpdx/stepwise "0.5.8"]`
+`[motiva/stepwise "0.6.0"]`
 
 At the REPL:
 
