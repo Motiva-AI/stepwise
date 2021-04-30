@@ -2,7 +2,7 @@
   (:require [stepwise.model :as mdl]
             [stepwise.sugar :as sgr]
             [stepwise.reloaded :as reloaded]
-            [stepwise.core :as core]
+            [stepwise.core :as stepwise]
             [clojure.spec.gen.alpha :as sgen]
             [clojure.repl :refer :all]
             [stepwise.specs.sugar :as sgrs]
@@ -81,33 +81,33 @@
   ;(client/start-execution "arn:aws:states:us-west-2:256212633204:stateMachine:test-machine" {:input {:hi "foo"}})
   ;#spy/p (client/get-execution-history "arn:aws:states:us-west-2:256212633204:execution:test-machine:ebba36d3-3a4c-4d51-a97b-d6409043a998")
   ;(client/list-state-machines)
-  #_(core/boot-workers "ncgl-dev-dacc"
-                       {:hello-world-v3 {:start-at :foo
-                                         :states   {:foo {:type     :task
-                                                          :resource ::add
-                                                          :end      true}}}}
-                       {::add (fn [])})
+  #_(stepwise/boot-workers "ncgl-dev-dacc"
+                           {:hello-world-v3 {:start-at :foo
+                                             :states   {:foo {:type     :task
+                                                              :resource ::add
+                                                              :end      true}}}}
+                           {::add (fn [])})
   #_(let [namespace   "ncgl-dev-dacc"
           rand-ns     (str (rand-int 20))
           machine-id  (keyword "dev-repl" rand-ns)
           activity-kw (keyword "dev-repl" rand-ns)
-          workers     (core/start-workers namespace {activity-kw (fn [{:keys [a b]}] (throw (ex-info "hi" {:error :blamo})))})]
-      (core/ensure-state-machine namespace
-                                 machine-id
-                                 {:start-at :foo
-                                  :states   {:foo {:type            :task
-                                                   :resource        activity-kw
-                                                   :timeout-seconds 3
-                                                   :end             true}}})
+          workers     (stepwise/start-workers namespace {activity-kw (fn [{:keys [a b]}] (throw (ex-info "hi" {:error :blamo})))})]
+      (stepwise/ensure-state-machine namespace
+                                     machine-id
+                                     {:start-at :foo
+                                      :states   {:foo {:type            :task
+                                                       :resource        activity-kw
+                                                       :timeout-seconds 3
+                                                       :end             true}}})
 
-      (core/run-execution namespace
-                          machine-id
-                          {:input {:a 1
-                                   :b 2}})
-      (core/shutdown-workers workers)
+      (stepwise/run-execution namespace
+                              machine-id
+                              {:input {:a 1
+                                       :b 2}})
+      (stepwise/shutdown-workers workers)
       )
 
-  ;(core/create-state-machine "ncgl-dev-dacc"
+  ;(stepwise/create-state-machine "ncgl-dev-dacc"
   ;                           ::machine
   ;                           {:start-at :foo
   ;                            :states   {:foo {:type            :task
