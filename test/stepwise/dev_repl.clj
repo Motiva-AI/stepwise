@@ -39,13 +39,13 @@
       (mdl/map->StateMachine)))
 
 (defn sandbox []
-  (reloaded/run-execution :adder
-                          {:start-at :add
-                           :states   {:add {:type     :task
-                                            :resource :activity/add
-                                            :end      true}}}
-                          {:activity/add (fn [{:keys [x y]}] (+ x y))}
-                          {:x 41 :y 1})
+  (reloaded/start-execution!! :adder
+                              {:start-at :add
+                               :states   {:add {:type     :task
+                                                :resource :activity/add
+                                                :end      true}}}
+                              {:activity/add (fn [{:keys [x y]}] (+ x y))}
+                              {:x 41 :y 1})
 
   #_(s/explain-data ::sgr/state-machine
                     {:start-at :my-choice
@@ -100,10 +100,10 @@
                                                        :timeout-seconds 3
                                                        :end             true}}})
 
-      (stepwise/run-execution namespace
-                              machine-id
-                              {:input {:a 1
-                                       :b 2}})
+      (stepwise/start-execution!! namespace
+                                  machine-id
+                                  {:input {:a 1
+                                           :b 2}})
       (stepwise/shutdown-workers workers)
       )
 
@@ -115,16 +115,16 @@
   ;                                             :timeout-seconds 3
   ;                                             :end             true}}})
 
-  #_(reloaded/run-execution "ncgl-dev-dacc"
-                            :test-machine-v2
-                            {:start-at :do-the-sum
-                             :states   {:do-the-sum {:type            :task
-                                                     :resource        :sum
-                                                     :timeout-seconds 180
-                                                     :end             true}}}
-                            {:sum (fn [{:keys [a b]}] (+ a b))}
-                            {:a 1
-                             :b 2})
+  #_(reloaded/start-execution!! "ncgl-dev-dacc"
+                                :test-machine-v2
+                                {:start-at :do-the-sum
+                                 :states   {:do-the-sum {:type            :task
+                                                         :resource        :sum
+                                                         :timeout-seconds 180
+                                                         :end             true}}}
+                                {:sum (fn [{:keys [a b]}] (+ a b))}
+                                {:a 1
+                                 :b 2})
   #_(sgr/get-non-model-keys {:foo [{:bar :bam}]
                              :bim {:boom          :bap
                                    ::mdl/resource "hi"}})

@@ -39,9 +39,9 @@
        (activities/resolve-resources arns/resource-arn->kw)
        (denamespace-keys)))
 
-(defn start-execution
+(defn start-execution!
   ([state-machine-name]
-   (start-execution state-machine-name nil))
+   (start-execution! state-machine-name nil))
   ([state-machine-name {:keys [input execution-name]}]
    ; TODO always include these(?)
    (let [input (if execution-name
@@ -66,11 +66,11 @@
           (recur (client/describe-execution execution-arn)))
       (denamespace-keys execution))))
 
-(defn run-execution
+(defn start-execution!!
   ([state-machine-name]
-   (run-execution state-machine-name nil))
+   (start-execution!! state-machine-name nil))
   ([state-machine-name {:keys [input execution-name] :as opts}]
-   (await-execution (start-execution state-machine-name opts))))
+   (await-execution (start-execution! state-machine-name opts))))
 
 (defn start-workers
   ([task-handlers]
