@@ -53,7 +53,7 @@
                               ; TODO nil execution-name here causes step functions to gen one?
                               :name  execution-name}))))
 
-(defn await-execution [execution-arn]
+(defn- await-execution [execution-arn]
   ; TODO occasionally not long enough for execution to even be visible yet -- catch
   (Thread/sleep 500)
   (loop [execution (client/describe-execution execution-arn)]
