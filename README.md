@@ -37,7 +37,7 @@ At the REPL:
                                                  :end      true}}})
 => "arn:aws:states:us-west-2:123456789012:stateMachine:adder"
 
-(stepwise/start-workers {:activity/add (fn [{:keys [x y]}] (+ x y))})
+(stepwise/start-workers! {:activity/add (fn [{:keys [x y]}] (+ x y))})
 => ...
 
 (stepwise/start-execution!! :adder {:input {:x 1 :y 1}})

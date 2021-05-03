@@ -72,9 +72,9 @@
   ([state-machine-name {:keys [input execution-name] :as opts}]
    (await-execution (start-execution! state-machine-name opts))))
 
-(defn start-workers
+(defn start-workers!
   ([task-handlers]
-   (start-workers task-handlers nil))
+   (start-workers! task-handlers nil))
   ([task-handlers {:keys [task-concurrency]}]
    (let [activity->arn (into {}
                              (map (fn [activity-name]

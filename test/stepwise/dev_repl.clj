@@ -91,7 +91,7 @@
           rand-ns     (str (rand-int 20))
           machine-id  (keyword "dev-repl" rand-ns)
           activity-kw (keyword "dev-repl" rand-ns)
-          workers     (stepwise/start-workers namespace {activity-kw (fn [{:keys [a b]}] (throw (ex-info "hi" {:error :blamo})))})]
+          workers     (stepwise/start-workers! namespace {activity-kw (fn [{:keys [a b]}] (throw (ex-info "hi" {:error :blamo})))})]
       (stepwise/ensure-state-machine namespace
                                      machine-id
                                      {:start-at :foo

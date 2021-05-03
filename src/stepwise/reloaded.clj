@@ -29,8 +29,8 @@
         definition         (activities/resolve-kw-resources activity->snapshot
                                                             definition)
         snapshot-arn       (core/ensure-state-machine snapshot-name definition)
-        workers            (core/start-workers (sets/rename-keys task-handlers
-                                                                 activity->snapshot))
+        workers            (core/start-workers! (sets/rename-keys task-handlers
+                                                                  activity->snapshot))
         result             (core/start-execution!! snapshot-name
                                                    {:input          input
                                                     :execution-name (str (UUID/randomUUID))})]
