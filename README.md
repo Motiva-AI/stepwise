@@ -37,10 +37,10 @@ At the REPL:
                                                  :end      true}}})
 => "arn:aws:states:us-west-2:123456789012:stateMachine:adder"
 
-(stepwise/start-workers {:activity/add (fn [{:keys [x y]}] (+ x y))})
+(stepwise/start-workers! {:activity/add (fn [{:keys [x y]}] (+ x y))})
 => ...
 
-(stepwise/run-execution :adder {:input {:x 1 :y 1}})
+(stepwise/start-execution!! :adder {:input {:x 1 :y 1}})
 =>
 {:input             {:x 1 :y 1}
  :output            2
@@ -57,18 +57,18 @@ At the REPL:
 
 ## Development Workflow
 
-Stepwise enables a rapidly cycling development workflow for Step Functions. State machine definition updates are eventually consistent, so new state machines need to be created on each cycle during development. Also, activity task polls are long and cannot be interrupted, demanding registration of new activities (or a JVM restart) to prevent stealing by stale bytecode. Stepwise provides a single function, `stepwise.reloaded/run-execution`, that uses fresh state machine and activity task registrations to run a state machine execution wherein code changes are immediately reflected.
+Stepwise enables a rapidly cycling development workflow for Step Functions. State machine definition updates are eventually consistent, so new state machines need to be created on each cycle during development. Also, activity task polls are long and cannot be interrupted, demanding registration of new activities (or a JVM restart) to prevent stealing by stale bytecode. Stepwise provides a single function, `stepwise.reloaded/start-execution!!`, that uses fresh state machine and activity task registrations to run a state machine execution wherein code changes are immediately reflected.
 
 Example:
 
 ```clojure
-(stepwise.reloaded/run-execution :adder
-                                 {:start-at :add
-                                  :states   {:add {:type     :task
-                                                   :resource :activity/add
-                                                   :end      true}}}
-                                 {:activity/add (fn [{:keys [x y]}] (+ x y))}
-                                 {:x 41 :y 1})
+(stepwise.reloaded/start-execution!! :adder
+                                     {:start-at :add
+                                      :states   {:add {:type     :task
+                                                       :resource :activity/add
+                                                       :end      true}}}
+                                     {:activity/add (fn [{:keys [x y]}] (+ x y))}
+                                     {:x 41 :y 1})
 =>
 {:output 42,
  :state-machine-arn "arn:aws:states:us-west-2:256212633204:stateMachine:adder-1522697821734",

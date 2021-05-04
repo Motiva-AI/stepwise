@@ -22,18 +22,18 @@
                                        (name activity-name))]))
         activity-names))
 
-(defn run-execution [machine-name definition task-handlers input]
+(defn start-execution!! [machine-name definition task-handlers input]
   (let [snapshot-name      (machine-name->snapshot machine-name)
         activity-names     (activities/get-names definition)
         activity->snapshot (activity-name->snapshot snapshot-name activity-names)
         definition         (activities/resolve-kw-resources activity->snapshot
                                                             definition)
         snapshot-arn       (core/ensure-state-machine snapshot-name definition)
-        workers            (core/start-workers (sets/rename-keys task-handlers
-                                                                 activity->snapshot))
-        result             (core/run-execution snapshot-name
-                                               {:input          input
-                                                :execution-name (str (UUID/randomUUID))})]
+        workers            (core/start-workers! (sets/rename-keys task-handlers
+                                                                  activity->snapshot))
+        result             (core/start-execution!! snapshot-name
+                                                   {:input          input
+                                                    :execution-name (str (UUID/randomUUID))})]
     (core/kill-workers workers)
     (doseq [[_ snapshot-name] activity->snapshot]
       (client/delete-activity (arns/get-activity-arn snapshot-name)))

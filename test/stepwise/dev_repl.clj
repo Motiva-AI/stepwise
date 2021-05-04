@@ -2,7 +2,7 @@
   (:require [stepwise.model :as mdl]
             [stepwise.sugar :as sgr]
             [stepwise.reloaded :as reloaded]
-            [stepwise.core :as core]
+            [stepwise.core :as stepwise]
             [clojure.spec.gen.alpha :as sgen]
             [clojure.repl :refer :all]
             [stepwise.specs.sugar :as sgrs]
@@ -39,13 +39,13 @@
       (mdl/map->StateMachine)))
 
 (defn sandbox []
-  (reloaded/run-execution :adder
-                          {:start-at :add
-                           :states   {:add {:type     :task
-                                            :resource :activity/add
-                                            :end      true}}}
-                          {:activity/add (fn [{:keys [x y]}] (+ x y))}
-                          {:x 41 :y 1})
+  (reloaded/start-execution!! :adder
+                              {:start-at :add
+                               :states   {:add {:type     :task
+                                                :resource :activity/add
+                                                :end      true}}}
+                              {:activity/add (fn [{:keys [x y]}] (+ x y))}
+                              {:x 41 :y 1})
 
   #_(s/explain-data ::sgr/state-machine
                     {:start-at :my-choice
@@ -81,33 +81,33 @@
   ;(client/start-execution "arn:aws:states:us-west-2:256212633204:stateMachine:test-machine" {:input {:hi "foo"}})
   ;#spy/p (client/get-execution-history "arn:aws:states:us-west-2:256212633204:execution:test-machine:ebba36d3-3a4c-4d51-a97b-d6409043a998")
   ;(client/list-state-machines)
-  #_(core/boot-workers "ncgl-dev-dacc"
-                       {:hello-world-v3 {:start-at :foo
-                                         :states   {:foo {:type     :task
-                                                          :resource ::add
-                                                          :end      true}}}}
-                       {::add (fn [])})
+  #_(stepwise/boot-workers "ncgl-dev-dacc"
+                           {:hello-world-v3 {:start-at :foo
+                                             :states   {:foo {:type     :task
+                                                              :resource ::add
+                                                              :end      true}}}}
+                           {::add (fn [])})
   #_(let [namespace   "ncgl-dev-dacc"
           rand-ns     (str (rand-int 20))
           machine-id  (keyword "dev-repl" rand-ns)
           activity-kw (keyword "dev-repl" rand-ns)
-          workers     (core/start-workers namespace {activity-kw (fn [{:keys [a b]}] (throw (ex-info "hi" {:error :blamo})))})]
-      (core/ensure-state-machine namespace
-                                 machine-id
-                                 {:start-at :foo
-                                  :states   {:foo {:type            :task
-                                                   :resource        activity-kw
-                                                   :timeout-seconds 3
-                                                   :end             true}}})
+          workers     (stepwise/start-workers! namespace {activity-kw (fn [{:keys [a b]}] (throw (ex-info "hi" {:error :blamo})))})]
+      (stepwise/ensure-state-machine namespace
+                                     machine-id
+                                     {:start-at :foo
+                                      :states   {:foo {:type            :task
+                                                       :resource        activity-kw
+                                                       :timeout-seconds 3
+                                                       :end             true}}})
 
-      (core/run-execution namespace
-                          machine-id
-                          {:input {:a 1
-                                   :b 2}})
-      (core/shutdown-workers workers)
+      (stepwise/start-execution!! namespace
+                                  machine-id
+                                  {:input {:a 1
+                                           :b 2}})
+      (stepwise/shutdown-workers workers)
       )
 
-  ;(core/create-state-machine "ncgl-dev-dacc"
+  ;(stepwise/create-state-machine "ncgl-dev-dacc"
   ;                           ::machine
   ;                           {:start-at :foo
   ;                            :states   {:foo {:type            :task
@@ -115,16 +115,16 @@
   ;                                             :timeout-seconds 3
   ;                                             :end             true}}})
 
-  #_(reloaded/run-execution "ncgl-dev-dacc"
-                            :test-machine-v2
-                            {:start-at :do-the-sum
-                             :states   {:do-the-sum {:type            :task
-                                                     :resource        :sum
-                                                     :timeout-seconds 180
-                                                     :end             true}}}
-                            {:sum (fn [{:keys [a b]}] (+ a b))}
-                            {:a 1
-                             :b 2})
+  #_(reloaded/start-execution!! "ncgl-dev-dacc"
+                                :test-machine-v2
+                                {:start-at :do-the-sum
+                                 :states   {:do-the-sum {:type            :task
+                                                         :resource        :sum
+                                                         :timeout-seconds 180
+                                                         :end             true}}}
+                                {:sum (fn [{:keys [a b]}] (+ a b))}
+                                {:a 1
+                                 :b 2})
   #_(sgr/get-non-model-keys {:foo [{:bar :bam}]
                              :bim {:boom          :bap
                                    ::mdl/resource "hi"}})

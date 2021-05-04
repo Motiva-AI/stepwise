@@ -39,9 +39,9 @@
        (activities/resolve-resources arns/resource-arn->kw)
        (denamespace-keys)))
 
-(defn start-execution
+(defn start-execution!
   ([state-machine-name]
-   (start-execution state-machine-name nil))
+   (start-execution! state-machine-name nil))
   ([state-machine-name {:keys [input execution-name]}]
    ; TODO always include these(?)
    (let [input (if execution-name
@@ -53,7 +53,7 @@
                               ; TODO nil execution-name here causes step functions to gen one?
                               :name  execution-name}))))
 
-(defn await-execution [execution-arn]
+(defn- await-execution [execution-arn]
   ; TODO occasionally not long enough for execution to even be visible yet -- catch
   (Thread/sleep 500)
   (loop [execution (client/describe-execution execution-arn)]
@@ -66,15 +66,15 @@
           (recur (client/describe-execution execution-arn)))
       (denamespace-keys execution))))
 
-(defn run-execution
+(defn start-execution!!
   ([state-machine-name]
-   (run-execution state-machine-name nil))
+   (start-execution!! state-machine-name nil))
   ([state-machine-name {:keys [input execution-name] :as opts}]
-   (await-execution (start-execution state-machine-name opts))))
+   (await-execution (start-execution! state-machine-name opts))))
 
-(defn start-workers
+(defn start-workers!
   ([task-handlers]
-   (start-workers task-handlers nil))
+   (start-workers! task-handlers nil))
   ([task-handlers {:keys [task-concurrency]}]
    (let [activity->arn (into {}
                              (map (fn [activity-name]
@@ -87,16 +87,16 @@
                        (activities/compile-all))
                    task-concurrency))))
 
-(defn wait-all-exit! [{:keys [exit-chans]}]
+(defn wait-all-exit!! [{:keys [exit-chans]}]
   (->> (async/merge exit-chans)
        (async/into #{})
        (async/<!!)))
 
 (defn shutdown-workers [workers]
   (async/>!! (:terminate-chan workers) :shutdown)
-  (wait-all-exit! workers))
+  (wait-all-exit!! workers))
 
 (defn kill-workers [workers]
   (async/>!! (:terminate-chan workers) :kill)
-  (wait-all-exit! workers))
+  (wait-all-exit!! workers))
 
