@@ -4,18 +4,15 @@
 
 Stepwise is an idiomatic Clojure library for [AWS Step Functions](https://aws.amazon.com/step-functions/). Use it to coordinate asynchronous, distributed processes with AWS managing state, branching, and retries.
 
+This Motiva-AI library is a fork of [uwcpdx/stepwise](https://github.com/uwcpdx/stepwise) and contains [breaking changes](https://github.com/Motiva-AI/stepwise/blob/master/CHANGELOG.md).
+
 Implemented Features:
 
  * Validated EDN representation of the [Amazon States Language](https://states-language.net/spec.html)
  * Activity task polling and handling ready for [component](https://github.com/stuartsierra/component), [integrant](https://github.com/weavejester/integrant), or similar.
  * Tooling for [rapid development via code reloading](http://thinkrelevance.com/blog/2013/06/04/clojure-workflow-reloaded)
 
-Future Features:
-
- * Transparent serverless deployment of activity task handlers as [AWS Lambda](https://aws.amazon.com/lambda/) functions (possibly via [portkey](https://github.com/cgrand/portkey))
- * Support for [test.check](https://github.com/clojure/test.check) validation of state machine definitions via emulation of the Step Functions backend
-
-Our production bioinformatics pipeline is implemented using this library. Still pre-1.0 and some minor API changes are likely.
+Our production workflow orchestration is implemented using this library.
 
 ## Basic Usage
 
@@ -23,7 +20,7 @@ Here's how to make a trivial state machine that just adds two inputs together. T
 
 For your dependencies:
 
-`[motiva/stepwise "0.6.0"]`
+`[ai.motiva/stepwise "1.0.0-SNAPSHOT"]`
 
 At the REPL:
 

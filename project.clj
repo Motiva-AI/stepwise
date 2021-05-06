@@ -1,4 +1,4 @@
-(defproject ai.motiva/stepwise "0.6.0-SNAPSHOT"
+(defproject ai.motiva/stepwise "1.0.0-SNAPSHOT"
   :profiles {:dev {:dependencies [[org.clojure/tools.namespace "1.1.0"]
                                   [org.clojure/clojure "1.10.3"]
                                   [org.clojure/spec.alpha "0.2.194"]
