@@ -7,7 +7,6 @@ version: 2.1
 jobs:
   build:
     docker:
-      # specify the version you desire here
       - image: circleci/clojure:lein-2.9.5
 
       # Specify service dependencies here if necessary
@@ -42,7 +41,32 @@ jobs:
       # run tests!
       - run: lein test
 
+  deploy:
+    docker:
+      - image: circleci/clojure:lein-2.9.5
+
+    environment:
+      LEIN_ROOT: "true"
+      # Customize the JVM maximum heap limit
+      JVM_OPTS: -Xmx3200m
+
+    steps:
+      - checkout
+
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "project.clj" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+
+      - run: lein deploy clojars
+
 workflows:
   build:
     jobs:
       - build
+      - deploy:
+          requires:
+              - build
+
+
