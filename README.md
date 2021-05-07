@@ -1,6 +1,6 @@
-[![CircleCI](https://circleci.com/gh/Motiva-AI/stepwise/tree/master.svg?style=svg)](https://circleci.com/gh/Motiva-AI/stepwise/tree/master)
-
 # Stepwise
+
+[![Clojars Project](https://img.shields.io/clojars/v/ai.motiva/stepwise.svg)](https://clojars.org/ai.motiva/stepwise)
 
 Stepwise is an idiomatic Clojure library for [AWS Step Functions](https://aws.amazon.com/step-functions/). Use it to coordinate asynchronous, distributed processes with AWS managing state, branching, and retries.
 
@@ -17,10 +17,6 @@ Our production workflow orchestration is implemented using this library.
 ## Basic Usage
 
 Here's how to make a trivial state machine that just adds two inputs together. The only prerequisite is to install the [AWS CLI](https://aws.amazon.com/cli/) and run `aws configure` to set up your authentication and region.
-
-For your dependencies:
-
-`[ai.motiva/stepwise "1.0.0-SNAPSHOT"]`
 
 At the REPL:
 
