@@ -1,15 +1,13 @@
 (ns stepwise.serialization
-  (:require [clojure.data.json :as json]
+  (:require [pipeline-transit.core :as transit]
             [clojure.string :as strs]
             [clojure.pprint :as pprint]))
 
-; TODO Date(Time) sniff test+deser(?)
-(defn deser-io-doc [json-str]
-  (json/read-str json-str :key-fn keyword))
+(defn deser-io-doc [transit-json]
+  (transit/read-transit-json transit-json))
 
-; TODO Date(Time) serialization
 (defn ser-io-doc [data]
-  (json/write-str data))
+  (transit/write-transit-json data))
 
 (defn ser-keyword-name [kw-name]
   (-> kw-name
