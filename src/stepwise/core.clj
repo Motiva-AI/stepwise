@@ -85,7 +85,7 @@
      (workers/boot (-> task-handlers
                        (sets/rename-keys activity->arn)
                        (activities/compile-all))
-                   task-concurrency))))
+                   (sets/rename-keys task-concurrency activity->arn)))))
 
 (defn wait-all-exit!! [{:keys [exit-chans]}]
   (->> (async/merge exit-chans)

@@ -163,7 +163,7 @@
         (range 0 concurrency)))
 
 ; TODO check default client to ensure connection pool is big enough for all pollers
-(defn boot [activity-arn->handler-fn & [activity-arn->concurrency]]
+(defn boot [activity-arn->handler-fn activity-arn->concurrency]
   (let [terminate-chan (async/chan)
         terminate-mult (async/mult terminate-chan)
         exit-chans     (into #{}
