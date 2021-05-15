@@ -29,6 +29,14 @@
     client
     @stock-default-client))
 
+(defn get-client-max-connections
+  ([^AWSStepFunctionsClient client]
+   (-> client
+       (.getClientConfiguration)
+       (.getMaxConnections)))
+  ([]
+   (get-client-max-connections (get-default-client))))
+
 (defn syms->pairs [syms]
   (into []
         (mapcat #(vector (keyword (name 'stepwise.model) (name %))

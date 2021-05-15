@@ -162,8 +162,18 @@
                (boot-worker terminate-mult activity-arn handler-fn)))
         (range 0 concurrency)))
 
-; TODO check default client to ensure connection pool is big enough for all pollers
+(defn warn-if-concurrency-larger-than-connection-pool [activity-arn->concurrency]
+  (let [max-connections   (client/get-client-max-connections)
+        total-concurrency (apply + (vals activity-arn->concurrency))]
+    (when (< max-connections total-concurrency)
+      (log/warnf (str "Total number of workers concurrency [%d] is larger than aws client's max "
+                      "connections [%d]. There is a chance that connections might run out."
+                      total-concurrency max-connections)))))
+
 (defn boot [activity-arn->handler-fn activity-arn->concurrency]
+
+  (warn-if-concurrency-larger-than-connection-pool activity-arn->concurrency)
+
   (let [terminate-chan (async/chan)
         terminate-mult (async/mult terminate-chan)
         exit-chans     (into #{}
