@@ -45,10 +45,10 @@
 
 (defn make-handler-interceptor [handler-fn]
   [:handler
-   {:before (fn [env]
-              (assoc env :output (handler-fn (select-keys env [:context :input]))))}])
+   {:before (fn [{input :input :as env}]
+              (assoc env :output (handler-fn input)))}])
 
-(defn identity-handler-fn [{:keys [input]}] input)
+(defn identity-handler-fn [input] input)
 
 (defn compile [handler]
   (if (fn? handler)
