@@ -5,6 +5,7 @@
                                   [pjstadig/humane-test-output "0.11.0"]
                                   [org.slf4j/slf4j-simple "1.7.30"]
                                   [com.gfredericks/test.chuck "0.2.10"]
+                                  [circleci/bond "0.5.0"]
                                   ; TODO pending jdk 9 compat https://github.com/pallet/alembic/pull/16
                                   #_[alembic "0.3.2"]
                                   [org.clojure/test.check "1.1.0"]]
