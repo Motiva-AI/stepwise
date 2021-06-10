@@ -2,7 +2,7 @@
   (:refer-clojure :exclude [ensure compile])
   (:require [clojure.walk :as walk]
             [stepwise.arns :as arns]
-            [stepwise.interceptors :as interceptors]
+            [stepwise.interceptors.core :as interceptors]
             [stepwise.model :as mdl]
             [stepwise.client :as client])
   (:import (clojure.lang MapEntry)))

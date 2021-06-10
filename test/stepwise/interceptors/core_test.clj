@@ -1,7 +1,7 @@
-(ns stepwise.interceptors-test
+(ns stepwise.interceptors.core-test
   (:refer-clojure :exclude [compile])
   (:require [clojure.test :as test]
-            [stepwise.interceptors :as main]))
+            [stepwise.interceptors.core :as main]))
 
 (def hello-world
   [:hello-world {:before (fn [context]

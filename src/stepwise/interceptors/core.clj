@@ -1,4 +1,4 @@
-(ns stepwise.interceptors
+(ns stepwise.interceptors.core
   (:refer-clojure :exclude [compile])
   (:require [clojure.tools.logging :as log]))
 
