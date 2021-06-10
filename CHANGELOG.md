@@ -17,4 +17,5 @@ We use [Break Versioning][breakver]. The version numbers follow a `<major>.<mino
 * Project group is renamed to `ai.motiva/stepwise`
 * [Renamed some core functions](https://github.com/Motiva-AI/stepwise/commit/b81abbd6e09ca2351a502363d557a5a75d713242) to suffix with `!` or `!!` to denote (non)-blocking
 * `core/await-execution` is [made private](https://github.com/Motiva-AI/stepwise/commit/f718f2250e1c7799310e5509fe8d2894026abb86)
+* handler-interceptor passes the `input` [directly to handler-fn](https://github.com/Motiva-AI/stepwise/commit/1f92b0c6799d5db79eed69b6bc7d26df3ba96e77)
 
