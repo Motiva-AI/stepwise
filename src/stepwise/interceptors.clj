@@ -32,7 +32,14 @@
       (dissoc :queue)
       (assoc :queue (:stack context))))
 
-(defn well-formed-interceptor? [interceptor]
+(defn well-formed-interceptor?
+  "Interceptor should be a tuple of the form,
+   [:name {:before (fn [env] ... env)
+           :after  (fn [env] ... env)}]
+
+   :before and :after fn needs to return env or an updated version of env for
+   the next interceptor in the queue. Either fn can be nil if not used."
+  [interceptor]
   (let [stage-map (second interceptor)]
     (and (vector? interceptor)
          (= (count interceptor) 2)
@@ -44,7 +51,10 @@
              (fn? (:after stage-map))))))
 
 (defn compile
-  "Returns a fn that exercises a queue of interceptors against a task and returns a result"
+  "Returns a fn that exercises a queue of interceptors against a task and returns a result.
+
+   Reference:
+   https://day8.github.io/re-frame/Interceptors/"
   [queue]
   (doseq [[index interceptor] (map vector
                                    (range 0 (count queue))
