@@ -3,14 +3,17 @@
   (:require [clojure.test :as test]
             [stepwise.interceptors.core :as main]))
 
-(def hello-world
-  [:hello-world {:before (fn [context]
-                           (assoc context :output :hello-world))}])
+(def inc-x-interceptor-tuple
+  [:inc-x
+   {:enter (fn [ctx] (update-in ctx [:request :x] inc))}])
+
+(defn handler [request]
+  {:y (inc (:x request))})
 
 (defn execute [queue task]
-  ((main/compile queue) task (fn [])))
+  ((main/compile queue handler) task (fn [])))
 
-(test/deftest compile
-  (test/is (= :hello-world
-              (execute [hello-world] {}))))
+(test/deftest compile-test
+  (test/is (= {:y 42}
+              (execute [inc-x-interceptor-tuple] {:x 40}))))
 

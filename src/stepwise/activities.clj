@@ -43,20 +43,14 @@
                [activity-name (ensure activity-name)]))
         activity-names))
 
-(defn make-handler-interceptor [handler-fn]
-  [:handler
-   {:before (fn [{input :input :as env}]
-              (assoc env :output (handler-fn input)))}])
-
-(defn identity-handler-fn [input] input)
-
 (defn compile [handler]
   (if (fn? handler)
     handler
-    (interceptors/compile (into (vec (:interceptors handler))
-                                [(make-handler-interceptor (get handler
-                                                                :handler-fn
-                                                                identity-handler-fn))]))))
+    (interceptors/compile
+      (vec (:interceptors handler))
+      (get handler
+           :handler-fn
+           identity))))
 
 (defn compile-all [activity->handler]
   (into {}

@@ -22,6 +22,7 @@
                  [org.clojure/tools.logging "1.1.0"]
                  [org.clojure/data.json "2.2.2"]
                  [org.clojure/core.async "1.3.618"]
+                 [metosin/sieppari "0.0.0-alpha13"]
                  [com.amazonaws/aws-java-sdk-iam "1.11.1007"]
                  [com.amazonaws/aws-java-sdk-sts "1.11.1007"]
                  [com.amazonaws/aws-java-sdk-stepfunctions "1.11.1007"]])
