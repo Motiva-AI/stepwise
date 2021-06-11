@@ -38,12 +38,19 @@
                       {:index index
                        :form  interceptor-tuple})))))
 
-(defn assoc-send-heartbeat-fn-to-context-interceptor
+(defn- assoc-send-heartbeat-fn-to-context-interceptor
   [send-heartbeat-fn]
   {:enter (fn [ctx] (assoc ctx :send-heartbeat-fn send-heartbeat-fn))})
 
-(defn interceptor-tuples->interceptors [interceptor-tuples]
+(defn- interceptor-tuples->interceptors [interceptor-tuples]
   (map second interceptor-tuples))
+
+(defn- prepend-this-interceptor-to-interceptor-chain [this-interceptor chain]
+  (cons this-interceptor
+        chain))
+
+(defn- form-interceptor-chain [handler-fn interceptors]
+  (concat interceptors [handler-fn]))
 
 (defn compile
   "Returns a fn that exercises a chain of interceptor-tuples against a task
@@ -53,10 +60,10 @@
 
   (with-meta (fn [input send-heartbeat-fn]
                (s/execute
-                 (concat
-                   (cons (assoc-send-heartbeat-fn-to-context-interceptor send-heartbeat-fn)
-                         (interceptor-tuples->interceptors named-chain))
-                   [handler-fn])
+                 (->> named-chain
+                      (interceptor-tuples->interceptors)
+                      (prepend-this-interceptor-to-interceptor-chain (assoc-send-heartbeat-fn-to-context-interceptor send-heartbeat-fn))
+                      (form-interceptor-chain handler-fn))
                  input))
              {:heartbeat? true}))
 
