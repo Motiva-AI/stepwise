@@ -1,10 +1,14 @@
 (ns stepwise.interceptors
-  (:require [clojure.core.async :as async]))
+  (:require [clojure.core.async :as async]
+            [clojure.tools.logging :as log]))
 
 (defn beat-heart-every-n-seconds!
   "Calls heartbeat-fn every n seconds. Stops the loop after any Exception thrown by heartbeat-fn."
   [heartbeat-fn n-seconds]
-  (async/go-loop []
+  (log/debug "Starting periodic heartbeat ping.")
+
+  (async/go-loop
+    []
     (async/<! (async/timeout (* n-seconds 1000)))
     (let [continue?
           (try
@@ -19,6 +23,7 @@
               ; expire and calling (heartbeat-fn) would throw
               ; `com.amazonaws.services.stepfunctions.model.TaskTimedOutException`.
               ; This catches that and exits the loop gracefully
+              (log/debugf "Stopping periodic heartbeat ping.")
               false))]
       (when continue? (recur)))))
 
