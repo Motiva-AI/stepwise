@@ -28,6 +28,16 @@
          (or (nil? (:leave interceptor-map))
              (fn? (:leave interceptor-map))))))
 
+(defn assert-named-chain
+  [named-chain]
+  (doseq [[index interceptor-tuple] (map vector
+                                         (range 0 (count named-chain))
+                                         named-chain)]
+    (when-not (well-formed-interceptor-tuple? interceptor-tuple)
+      (throw (ex-info "Malformed interceptor-tuple. See (doc stepwise.interceptors.core/well-formed-interceptor-tuple?) for example."
+                      {:index index
+                       :form  interceptor-tuple})))))
+
 (defn assoc-send-heartbeat-fn-to-context-interceptor
   [send-heartbeat-fn]
   {:enter (fn [ctx] (assoc ctx :send-heartbeat-fn send-heartbeat-fn))})
@@ -36,16 +46,10 @@
   (map second interceptor-tuples))
 
 (defn compile
-  "Returns a fn that exercises a chain of interceptors against a task
+  "Returns a fn that exercises a chain of interceptor-tuples against a task
    and returns a result. Uses metosin/siepppari under the hood."
   [named-chain handler-fn]
-  (doseq [[index interceptor-tuple] (map vector
-                                   (range 0 (count named-chain))
-                                   named-chain)]
-    (when-not (well-formed-interceptor-tuple? interceptor-tuple)
-      (throw (ex-info "Malformed interceptor-tuple. See (doc stepwise.interceptors.core/well-formed-interceptor-tuple?) for example."
-                      {:index index
-                       :form  interceptor-tuple}))))
+  (assert-named-chain named-chain)
 
   (with-meta (fn [input send-heartbeat-fn]
                (s/execute
