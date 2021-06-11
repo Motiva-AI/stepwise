@@ -27,19 +27,20 @@
               false))]
       (when continue? (recur)))))
 
-(defn send-heartbeat-interceptor-fn
+(defn send-heartbeat-interceptor
   "Usage:
 
    (stepwise/start-workers!
 
    ::addr
    {:handler-fn   add
-    :interceptors [[:send-heartbeat
-                    {:before (send-heartbeat-interceptor-fn 10)}]]}
+    :interceptors [send-heartbeat-interceptor [...] [...] ...]}
    "
   [n-seconds]
-  (fn [{{heartbeat-fn :send-heartbeat} :context
-        :as env}]
-    (beat-heart-every-n-seconds! (heartbeat-fn) n-seconds)
-    env))
+  [:send-heartbeat
+   {:enter
+    (fn [{send-heartbeat-fn :send-heartbeat-fn
+          :as ctx}]
+      (beat-heart-every-n-seconds! (send-heartbeat-fn) n-seconds)
+      ctx)}])
 
