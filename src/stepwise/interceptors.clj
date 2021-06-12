@@ -34,7 +34,7 @@
 
    ::addr
    {:handler-fn   add
-    :interceptors [send-heartbeat-interceptor [...] [...] ...]}
+    :interceptors [(send-heartbeat-interceptor 5) [...] [...] ...]}
    "
   [n-seconds]
   [:send-heartbeat
