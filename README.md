@@ -221,3 +221,60 @@ EDN
 You can also supply an ARN string for the resource to specify a lambda task or
 activity task managed outside of stepwise.
 
+## Interceptors
+
+Stepwise support [interceptors](http://pedestal.io/reference/interceptors) to
+the activity handlers.
+
+### Example
+
+```clojure
+(require '[stepwise.core :as stepwise])
+
+(stepwise/ensure-state-machine :adder
+                               {:start-at :add
+                                :states   {:add {:type     :task
+                                                 :resource :activity/add
+                                                 :end      true}}})
+=> "arn:aws:states:us-west-2:123456789012:stateMachine:adder"
+
+(stepwise/start-workers! {:activity/add
+                            {:handler-fn (fn [{:keys [x y]}] (+ x y))
+                             :interceptors [[:inc-x {:enter (fn [ctx] (update-in ctx [:request :x] inc))}]]}})
+=> ...
+
+(stepwise/start-execution!! :adder {:input {:x 1 :y 1}})
+=>
+{:input             {:x 1 :y 1}
+ :output            3
+ :state-machine-arn "arn:aws:states:us-west-2:123456789012:stateMachine:adder"
+ :start-date        #inst"2017-06-20T22:48:14.241-00:00"
+ :stop-date         #inst"2017-06-20T22:48:14.425-00:00"
+ :arn               "arn:aws:states:us-west-2:123456789012:execution:adder:98bc5005-4d3d-4a7f-9a34-13ac7f1c0891"
+ :status            "SUCCEEDED"
+ :name              "98bc5005-4d3d-4a7f-9a34-13ac7f1c0891"}
+
+(stepwise/shutdown-workers *2)
+=> #{:done}
+```
+
+### Built-In Interceptors
+
+#### send-heartbeat-interceptor
+
+A `stepwise.interceptors/send-heartbeat-interceptor` is provided for use with
+the `:heartbeat-seconds` task setting. For example,
+
+```clojure
+(stepwise/ensure-state-machine :adder
+                               {:start-at :add
+                                :states   {:add {:type     :task
+                                                 :resource :activity/add
+                                                 :heartbeat-seconds 3
+                                                 :end      true}}})
+(stepwise/start-workers!
+  {:activity/add {:handler-fn (fn [{:keys [x y]}] (Thread/sleep 10000) (+ x y))
+                  ;; send heartbeat every 1 second
+                  :interceptors [(stepwise.interceptors/send-heartbeat-interceptor 1)]}})
+```
+
