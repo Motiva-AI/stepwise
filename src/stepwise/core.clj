@@ -16,7 +16,13 @@
   (walk/prewalk (sgr/renamespace-keys (constantly true) nil)
                 response))
 
-(defn ensure-state-machine [name definition]
+(defn ensure-state-machine
+  "Create state machine `name` if not exist; otherwise update with definition.
+
+   Arguments:
+   name       - state machine keyword name
+   definition - define a state machine using EDN States Language. See README.md"
+  [name definition]
   (let [definition         (sgr/desugar definition)
         activity-name->arn (activities/ensure-all (activities/get-names definition))
         definition         (activities/resolve-kw-resources activity-name->arn definition)
@@ -40,6 +46,7 @@
        (denamespace-keys)))
 
 (defn start-execution!
+  "Starts a state machine execution. Non-blocking variant. For blocking, use (start-execution!!)"
   ([state-machine-name]
    (start-execution! state-machine-name nil))
   ([state-machine-name {:keys [input execution-name]}]
@@ -67,12 +74,25 @@
       (denamespace-keys execution))))
 
 (defn start-execution!!
+  "Starts a state machine execution. Blocking variant. For non-blocking, use (start-execution!)"
   ([state-machine-name]
    (start-execution!! state-machine-name nil))
   ([state-machine-name {:keys [input execution-name] :as opts}]
    (await-execution (start-execution! state-machine-name opts))))
 
 (defn start-workers!
+  "Starts activity workers in the background. `task-handlers` is a map of
+   the form {<activity-resource-keyword> <handler fn>}. Where,
+
+   <activity-resource-keyword> must match what has been defined in your state
+   machine, see README.md for example.
+   <handler fn> could either be a fn [1] or a map with [:handler-fn :intercepters]
+   keys [2].
+
+   Examples:
+   [1] `(stepwise/start-workers! {:activity/add (fn [{:keys [x y]}] (+ x y))})`
+   [2] See `(doc stepwise.interceptors/send-heartbeat-interceptor)` for an
+       example using interceptors."
   ([task-handlers]
    (start-workers! task-handlers nil))
   ([task-handlers {:keys [task-concurrency]}]
