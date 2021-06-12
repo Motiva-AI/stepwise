@@ -5,6 +5,7 @@
 (defn beat-heart-every-n-seconds!
   "Calls heartbeat-fn every n seconds. Stops the loop after any Exception thrown by heartbeat-fn."
   [heartbeat-fn n-seconds]
+  {:pre [(fn? heartbeat-fn)]}
   (log/debug "Starting periodic heartbeat ping.")
 
   (async/go-loop
@@ -44,6 +45,6 @@
    {:enter
     (fn [{send-heartbeat-fn :send-heartbeat-fn
           :as ctx}]
-      (beat-heart-every-n-seconds! (send-heartbeat-fn) n-seconds)
+      (beat-heart-every-n-seconds! send-heartbeat-fn n-seconds)
       ctx)}])
 
