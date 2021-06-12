@@ -1,77 +1,69 @@
 (ns stepwise.interceptors.core
   (:refer-clojure :exclude [compile])
-  (:require [clojure.tools.logging :as log]))
+  (:require [sieppari.core :as s]))
 
-; cribbed from re-frame -- thanks re-frame!
+(defn well-formed-interceptor-tuple?
+  "Interceptor-tuple should be a tuple of the form,
+   [:name {:enter (fn [ctx] ... (update ctx :request myfn1))
+           :leave (fn [ctx] ... (update ctx :response myfn2))}]
 
-(defn- invoke-interceptor-fn
-  ; TODO clean up names
-  [context [id interceptor] direction]
-  (log/trace (prn-str {:interceptor id
-                       :direction   direction
-                       :context     context}))
-  (if-let [f (get interceptor direction)]
-    (f context)
-    context))
+   A few notes:
 
-(defn- invoke-interceptors
-  ([context direction]
-   (loop [context context]
-     (let [queue (:queue context)]                          ;; future interceptors
-       (if (empty? queue)
-         context
-         (let [interceptor (peek queue)                     ;; next interceptor to call
-               stack       (:stack context)]                ;; already completed interceptors
-           (recur (-> context
-                      (assoc :queue (pop queue)
-                             :stack (conj stack interceptor))
-                      (invoke-interceptor-fn interceptor direction)))))))))
-
-(defn- change-direction [context]
-  (-> context
-      (dissoc :queue)
-      (assoc :queue (:stack context))))
-
-(defn well-formed-interceptor?
-  "Interceptor should be a tuple of the form,
-   [:name {:before (fn [env] ... env)
-           :after  (fn [env] ... env)}]
-
-   :before and :after fn needs to return env or an updated version of env for
-   the next interceptor in the queue. Either fn can be nil if not used."
-  [interceptor]
-  (let [stage-map (second interceptor)]
-    (and (vector? interceptor)
-         (= (count interceptor) 2)
-         (keyword? (first interceptor))
-         (map? stage-map)
-         (or (nil? (:before stage-map))
-             (fn? (:before stage-map)))
-         (or (nil? (:after stage-map))
-             (fn? (:after stage-map))))))
-
-(defn compile
-  "Returns a fn that exercises a queue of interceptors against a task and returns a result.
+   1. `:enter` and `:leave` functions need to return `ctx` or an updated
+      version of `ctx` for the next interceptor in the chain
+   2. either `:enter` or `:leave` fn can be nil if not used
+   3. incoming data are tucked away in `:request` for `:enter` fn
+   4. outgoing data are in `:response` for `:leave` fn.
 
    Reference:
-   https://day8.github.io/re-frame/Interceptors/"
-  [queue]
-  (doseq [[index interceptor] (map vector
-                                   (range 0 (count queue))
-                                   queue)]
-    (when-not (well-formed-interceptor? interceptor)
-      (throw (ex-info "Malformed interceptor"
+   https://github.com/metosin/sieppari"
+  [interceptor-tuple]
+  (let [[interceptor-name interceptor-map] interceptor-tuple]
+    (and (vector? interceptor-tuple)
+         (= (count interceptor-tuple) 2)
+         (keyword? interceptor-name)
+         (map? interceptor-map)
+         (or (nil? (:enter interceptor-map))
+             (fn? (:enter interceptor-map)))
+         (or (nil? (:leave interceptor-map))
+             (fn? (:leave interceptor-map))))))
+
+(defn assert-named-chain
+  [named-chain]
+  (doseq [[index interceptor-tuple] (map vector
+                                         (range 0 (count named-chain))
+                                         named-chain)]
+    (when-not (well-formed-interceptor-tuple? interceptor-tuple)
+      (throw (ex-info "Malformed interceptor-tuple. See (doc stepwise.interceptors.core/well-formed-interceptor-tuple?) for example."
                       {:index index
-                       :form  interceptor}))))
-  (with-meta (fn execute [input send-heartbeat]
-               (-> {:input   input
-                    :output  nil
-                    :context {:send-heartbeat send-heartbeat}
-                    :stack   ()
-                    :queue   (into () (reverse queue))}
-                   (invoke-interceptors :before)
-                   change-direction
-                   (invoke-interceptors :after)
-                   :output))
+                       :form  interceptor-tuple})))))
+
+(defn- assoc-send-heartbeat-fn-to-context-interceptor
+  [send-heartbeat-fn]
+  {:enter (fn [ctx] (assoc ctx :send-heartbeat-fn send-heartbeat-fn))})
+
+(defn- interceptor-tuples->interceptors [interceptor-tuples]
+  (map second interceptor-tuples))
+
+(defn- prepend-this-interceptor-to-interceptor-chain [this-interceptor chain]
+  (cons this-interceptor
+        chain))
+
+(defn- form-interceptor-chain [handler-fn interceptors]
+  (concat interceptors [handler-fn]))
+
+(defn compile
+  "Returns a fn that exercises a chain of interceptor-tuples against a task
+   and returns a result. Uses metosin/siepppari under the hood."
+  [named-chain handler-fn]
+  (assert-named-chain named-chain)
+
+  (with-meta (fn [input send-heartbeat-fn]
+               (s/execute
+                 (->> named-chain
+                      (interceptor-tuples->interceptors)
+                      (prepend-this-interceptor-to-interceptor-chain (assoc-send-heartbeat-fn-to-context-interceptor send-heartbeat-fn))
+                      (form-interceptor-chain handler-fn))
+                 input))
              {:heartbeat? true}))
 

@@ -2,7 +2,8 @@
   (:refer-clojure :exclude [compile])
   (:require [clojure.test :refer [deftest testing is]]
             [bond.james :as bond]
-            [stepwise.interceptors :as i]))
+            [stepwise.interceptors :as i]
+            [stepwise.interceptors.core :refer [well-formed-interceptor-tuple?]]))
 
 (defn- heartbeat-fn [] :foo)
 (defn- failing-heartbeat-fn [] (throw (Exception. "testing failure mode")))
@@ -22,4 +23,7 @@
         (is (i/beat-heart-every-n-seconds! failing-heartbeat-fn 1))
         (Thread/sleep (* (inc n) period-sec 1000))
         (is (= 1 (-> failing-heartbeat-fn bond/calls count)))))))
+
+(deftest send-heartbeat-interceptor-test
+  (is (well-formed-interceptor-tuple? (i/send-heartbeat-interceptor 5))))
 
