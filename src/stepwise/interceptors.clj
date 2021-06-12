@@ -35,15 +35,8 @@
     (when (safely-called-heartbeat-fn? heartbeat-fn)
       (recur))))
 
-(defn send-heartbeat-interceptor
-  "Usage:
-
-   (stepwise/start-workers!
-
-   ::addr
-   {:handler-fn   add
-    :interceptors [(send-heartbeat-interceptor 5) [...] [...] ...]}
-   "
+(defn send-heartbeat-every-n-seconds-interceptor
+  "Calls send-heartbeat-fn every n seconds. send-heartbeat-fn is provided internally by Stepwise."
   [n-seconds]
   [:send-heartbeat
    {:enter

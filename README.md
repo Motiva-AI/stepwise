@@ -260,10 +260,10 @@ the activity handlers.
 
 ### Built-In Interceptors
 
-#### send-heartbeat-interceptor
+#### send-heartbeat-every-n-seconds-interceptor
 
-A `stepwise.interceptors/send-heartbeat-interceptor` is provided for use with
-the `:heartbeat-seconds` task setting. For example,
+A `stepwise.interceptors/send-heartbeat-every-n-seconds-interceptor` is
+provided for use with the `:heartbeat-seconds` task setting. For example,
 
 ```clojure
 (stepwise/ensure-state-machine :adder
@@ -274,7 +274,6 @@ the `:heartbeat-seconds` task setting. For example,
                                                  :end      true}}})
 (stepwise/start-workers!
   {:activity/add {:handler-fn (fn [{:keys [x y]}] (Thread/sleep 10000) (+ x y))
-                  ;; send heartbeat every 1 second
-                  :interceptors [(stepwise.interceptors/send-heartbeat-interceptor 1)]}})
+                  :interceptors [(stepwise.interceptors/send-heartbeat-every-n-seconds-interceptor 1)]}})
 ```
 

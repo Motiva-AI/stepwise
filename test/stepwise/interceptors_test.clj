@@ -24,6 +24,6 @@
         (Thread/sleep (* (inc n) period-sec 1000))
         (is (= 1 (-> failing-heartbeat-fn bond/calls count)))))))
 
-(deftest send-heartbeat-interceptor-test
-  (is (well-formed-interceptor-tuple? (i/send-heartbeat-interceptor 5))))
+(deftest send-heartbeat-every-n-seconds-interceptor-test
+  (is (well-formed-interceptor-tuple? (i/send-heartbeat-every-n-seconds-interceptor 5))))
 

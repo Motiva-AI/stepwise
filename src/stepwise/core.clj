@@ -89,10 +89,9 @@
    <handler fn> could either be a fn [1] or a map with [:handler-fn :intercepters]
    keys [2].
 
-   Examples:
-   [1] `(stepwise/start-workers! {:activity/add (fn [{:keys [x y]}] (+ x y))})`
-   [2] See `(doc stepwise.interceptors/send-heartbeat-interceptor)` for an
-       example using interceptors."
+   References:
+   [1] See https://github.com/Motiva-AI/stepwise#basic-usage
+   [2] See https://github.com/Motiva-AI/stepwise#interceptors"
   ([task-handlers]
    (start-workers! task-handlers nil))
   ([task-handlers {:keys [task-concurrency]}]
