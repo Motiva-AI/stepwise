@@ -16,14 +16,17 @@
             ;; happy path return
             true
 
-            (catch Exception _
+            (catch com.amazonaws.services.stepfunctions.model.TaskTimedOutException _
               ; When the corresponding handler-fn returns, meaning
               ; job is done so heartbeat ping is no longer needed,
               ; the message token closed over this heartbeat-fn would
               ; expire and calling (heartbeat-fn) would throw
               ; `com.amazonaws.services.stepfunctions.model.TaskTimedOutException`.
               ; This catches that and exits the loop gracefully
-              (log/debugf "Stopping periodic heartbeat ping.")
+              (log/debugf "Stopping periodic heartbeat ping because task is completed.")
+              false)
+            (catch Exception ex
+              (log/debugf "Stopping periodic heartbeat ping due to unexpected error: %s." (.getMessage ex))
               false))]
       (when continue? (recur)))))
 
