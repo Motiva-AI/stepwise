@@ -277,3 +277,9 @@ provided for use with the `:heartbeat-seconds` task setting. For example,
                   :interceptors [(stepwise.interceptors/send-heartbeat-every-n-seconds-interceptor 1)]}})
 ```
 
+## License
+
+Copyright © 2017-2021 UW Medicine Center For Precision Diagnostics, Motiva A.I.
+
+Distributed under the Eclipse Public License, the same as Clojure.
+
