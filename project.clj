@@ -1,9 +1,13 @@
-(defproject ai.motiva/stepwise "0.6.0-beta1"
+(defproject ai.motiva/stepwise "0.6.0"
+  :description "Clojure AWS Step Functions library"
+  :url "https://github.com/Motiva-AI/stepwise"
+  :license {:name "Eclipse Public License"
+            :url "http://www.eclipse.org/legal/epl-v10.html"}
   :profiles {:dev {:dependencies [[org.clojure/tools.namespace "1.1.0"]
                                   [org.clojure/clojure "1.10.3"]
                                   [org.clojure/spec.alpha "0.2.194"]
                                   [pjstadig/humane-test-output "0.11.0"]
-                                  [org.slf4j/slf4j-simple "1.7.30"]
+                                  [org.slf4j/slf4j-simple "1.7.31"]
                                   [com.gfredericks/test.chuck "0.2.11"]
                                   [circleci/bond "0.5.0"]
                                   ; TODO pending jdk 9 compat https://github.com/pallet/alembic/pull/16
@@ -23,7 +27,7 @@
                  [org.clojure/data.json "2.3.1"]
                  [org.clojure/core.async "1.3.618"]
                  [metosin/sieppari "0.0.0-alpha13"]
-                 [com.amazonaws/aws-java-sdk-iam "1.12.5"]
-                 [com.amazonaws/aws-java-sdk-sts "1.12.5"]
-                 [com.amazonaws/aws-java-sdk-stepfunctions "1.12.5"]])
+                 [com.amazonaws/aws-java-sdk-iam "1.12.13"]
+                 [com.amazonaws/aws-java-sdk-sts "1.12.13"]
+                 [com.amazonaws/aws-java-sdk-stepfunctions "1.12.13"]])
 
