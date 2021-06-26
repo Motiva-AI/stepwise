@@ -12,7 +12,7 @@ We use [Break Versioning][breakver]. The version numbers follow a `<major>.<mino
 
 [breakver]: https://github.com/ptaoussanis/encore/blob/master/BREAK-VERSIONING.md
 
-## 0.6.0 (TBD)
+## 0.6.0 (2021-06-26)
 
 * Project group is renamed to `ai.motiva/stepwise`
 * [Renamed some core functions](https://github.com/Motiva-AI/stepwise/commit/b81abbd6e09ca2351a502363d557a5a75d713242) to suffix with `!` or `!!` to denote (non)-blocking
