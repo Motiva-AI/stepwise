@@ -1,6 +1,9 @@
 (ns stepwise.interceptors
   (:require [clojure.core.async :as async]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [stepwise.interceptors.s3_offload :as offload]))
+
+;; Send Heartbeat
 
 (defn- safely-called-heartbeat-fn?
   "Evaluate heartbeat-fn in a try-catch. Returns false on any Exception
@@ -44,4 +47,31 @@
           :as ctx}]
       (beat-heart-every-n-seconds! send-heartbeat-fn n-seconds)
       ctx)}])
+
+;; Offload Payload
+
+(defn- map-vals [m f]
+  (into {} (for [[k v] m] [k (f v)])))
+
+(defn load-from-s3-interceptor-fn [s3-client]
+  (fn [ctx]
+    (->> #(map-vals % (partial offload/load-from-s3 s3-client))
+         (update ctx :request))))
+
+(defn- offload-values-to-s3 [s3-client m]
+  (map-vals m (partial offload/offload-to-s3 s3-client)))
+
+(defn offload-select-keys-to-s3-interceptor-fn [s3-client keyseq]
+  (fn [{response :response :as ctx}]
+    (->> (select-keys response keyseq)
+         (offload-values-to-s3 s3-client)
+         (merge response)
+         (assoc ctx :response))))
+
+(defn offload-all-keys-to-s3-interceptor-fn [s3-client]
+  (fn [{response :response :as ctx}]
+    (->> response
+         (offload-values-to-s3 s3-client)
+         (merge response)
+         (assoc ctx :response))))
 
