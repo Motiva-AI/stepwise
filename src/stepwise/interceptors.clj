@@ -58,20 +58,24 @@
     (->> #(map-vals % (partial offload/load-from-s3 s3-client))
          (update ctx :request))))
 
-(defn- offload-values-to-s3 [s3-client m]
-  (map-vals m (partial offload/offload-to-s3 s3-client)))
+(defn replace-vals [m v]
+  (into {} (for [[k _] m] [k v])))
+
+(defn replace-vals-with-offloaded-s3-arn [s3-arn m]
+  (replace-vals m {offload/stepwise-offload-tag s3-arn}))
 
 (defn offload-select-keys-to-s3-interceptor-fn [s3-client keyseq]
   (fn [{response :response :as ctx}]
-    (->> (select-keys response keyseq)
-         (offload-values-to-s3 s3-client)
+    (let [selected-map (select-keys response keyseq)
+          s3-arn       (offload/offload-to-s3 s3-client selected-map)]
+    (->> selected-map
+         (replace-vals-with-offloaded-s3-arn s3-arn)
          (merge response)
-         (assoc ctx :response))))
+         (assoc ctx :response)))))
 
 (defn offload-all-keys-to-s3-interceptor-fn [s3-client]
   (fn [{response :response :as ctx}]
-    (->> response
-         (offload-values-to-s3 s3-client)
-         (merge response)
-         (assoc ctx :response))))
+    (let [s3-arn (offload/offload-to-s3 s3-client response)]
+      (->> (replace-vals-with-offloaded-s3-arn s3-arn response)
+           (assoc ctx :response)))))
 

@@ -47,8 +47,8 @@
             {:request {:foo 3
                        :bar {offload/stepwise-offload-tag :this-is-an-arn}}})))))
 
-(defn offload-to-s3-mock [_ coll]
-  {offload/stepwise-offload-tag (keyword coll)})
+(defn offload-to-s3-mock [_ _]
+  :this-is-an-arn)
 
 (deftest offload-select-keys-to-s3-interceptor-fn-test
   (is (fn? (i/offload-select-keys-to-s3-interceptor-fn s3-client-stub [:bar])))
@@ -58,15 +58,15 @@
                        :bar {offload/stepwise-offload-tag :this-is-an-arn}}}
            ((i/offload-select-keys-to-s3-interceptor-fn s3-client-stub [:bar])
             {:response {:foo 3
-                        :bar "this-is-an-arn"}})))))
+                        :bar :soap}})))))
 
 (deftest offload-all-keys-to-s3-interceptor-fn-test
   (is (fn? (i/offload-all-keys-to-s3-interceptor-fn s3-client-stub)))
 
   (bond/with-stub! [[offload/offload-to-s3 offload-to-s3-mock]]
-    (is (= {:response {:foo {offload/stepwise-offload-tag :another-arn}
+    (is (= {:response {:foo {offload/stepwise-offload-tag :this-is-an-arn}
                        :bar {offload/stepwise-offload-tag :this-is-an-arn}}}
            ((i/offload-all-keys-to-s3-interceptor-fn s3-client-stub)
-            {:response {:foo "another-arn"
-                        :bar "this-is-an-arn"}})))))
+            {:response {:foo 3
+                        :bar :soap}})))))
 
