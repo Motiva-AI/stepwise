@@ -1,7 +1,7 @@
 (ns stepwise.interceptors
   (:require [clojure.core.async :as async]
             [clojure.tools.logging :as log]
-            [stepwise.interceptors.s3_offload :as offload]))
+            [stepwise.interceptors.s3-offload :as offload]))
 
 ;; Send Heartbeat
 
@@ -50,18 +50,20 @@
 
 ;; Offload Payload
 
-(defn- map-vals [m f]
-  (into {} (for [[k v] m] [k (f v)])))
-
 (defn load-from-s3-interceptor-fn [s3-client]
-  (fn [ctx]
-    (->> #(map-vals % (partial offload/load-from-s3 s3-client))
-         (update ctx :request))))
+  (fn [{request :request :as ctx}]
+    (if (offload/payload-on-s3? request)
+      (->> request
+           (offload/merge-request-with-offloaded-payload s3-client)
+           (assoc ctx :request))
 
-(defn replace-vals [m v]
+      ;; nothing was offloaded
+      ctx)))
+
+(defn- replace-vals [m v]
   (into {} (for [[k _] m] [k v])))
 
-(defn replace-vals-with-offloaded-s3-arn [s3-arn m]
+(defn- replace-vals-with-offloaded-s3-arn [s3-arn m]
   (replace-vals m {offload/stepwise-offload-tag s3-arn}))
 
 (defn offload-select-keys-to-s3-interceptor-fn [s3-client keyseq]
