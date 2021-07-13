@@ -284,9 +284,9 @@
   ([source-arn] (load-from-s3 (get-s3-client) source-arn)))
 
 (defn offload-to-s3
-  ([s3-client coll]
+  ([s3-client bucket-name coll]
    ;; TODO
    )
 
-  ([coll] (offload-to-s3 (get-s3-client) coll)))
+  ([bucket-name coll] (offload-to-s3 (get-s3-client) bucket-name coll)))
 

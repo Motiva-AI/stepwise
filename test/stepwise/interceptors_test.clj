@@ -56,25 +56,26 @@
               {:request {:foo offloaded-map
                          :bar offloaded-map}}))))))
 
-(defn offload-to-s3-mock [_] :this-is-an-arn)
+(defn offload-to-s3-mock [_ _] :this-is-an-arn)
+(def bucket-name "some-bucket-name")
 
 (deftest offload-select-keys-to-s3-interceptor-fn-test
-  (is (fn? (i/offload-select-keys-to-s3-interceptor-fn [:bar])))
+  (is (fn? (i/offload-select-keys-to-s3-interceptor-fn bucket-name [:bar])))
 
   (bond/with-stub! [[client/offload-to-s3 offload-to-s3-mock]]
     (is (= {:response {:foo 3
                        :bar offloaded-map}}
-           ((i/offload-select-keys-to-s3-interceptor-fn [:bar])
+           ((i/offload-select-keys-to-s3-interceptor-fn bucket-name [:bar])
             {:response {:foo 3
                         :bar :soap}})))))
 
 (deftest offload-all-keys-to-s3-interceptor-fn-test
-  (is (fn? (i/offload-all-keys-to-s3-interceptor-fn)))
+  (is (fn? (i/offload-all-keys-to-s3-interceptor-fn bucket-name)))
 
   (bond/with-stub! [[client/offload-to-s3 offload-to-s3-mock]]
     (is (= {:response {:foo offloaded-map
                        :bar offloaded-map}}
-           ((i/offload-all-keys-to-s3-interceptor-fn)
+           ((i/offload-all-keys-to-s3-interceptor-fn bucket-name)
             {:response {:foo 3
                         :bar :soap}})))))
 
