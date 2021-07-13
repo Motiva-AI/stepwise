@@ -24,6 +24,9 @@
 (defn merge-request-with-offloaded-payload [load-from-s3-fn request]
   (->> request
        (parse-s3-arns)
+       ;; TODO enable loading from multiple s3-arns. use case: if the
+       ;; payload is offloaded in different activities and merged together via
+       ;; Step Function paths
        (ensure-single-s3-arn)
        (load-from-s3-fn)
        (merge request)))
