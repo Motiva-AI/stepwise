@@ -1,12 +1,16 @@
 (ns stepwise.client
   (:require [stepwise.model :as mdl]
-            [clojure.core.async :as async])
+            [clojure.core.async :as async]
+
+            [cognitect.aws.client.api :as aws])
   (:import (com.amazonaws.services.stepfunctions AWSStepFunctionsClient
                                                  AWSStepFunctionsClientBuilder)
            (com.amazonaws ClientConfiguration)
            (com.amazonaws.services.stepfunctions.builder StateMachine)))
 
 (set! *warn-on-reflection* true)
+
+;; SFN client
 
 (def default-client
   (atom nil))
@@ -264,4 +268,25 @@
                  ~items-key
                  ~(vec (rest request-form))
                  ~xform)))
+
+;; S3 client
+
+(def stock-s3-client (delay (aws/client {:api :s3})))
+
+(defn get-s3-client []
+  @stock-s3-client)
+
+(defn load-from-s3
+  ([s3-client source-arn]
+   ;; TODO
+   )
+
+  ([source-arn] (load-from-s3 (get-s3-client) source-arn)))
+
+(defn offload-to-s3
+  ([s3-client coll]
+   ;; TODO
+   )
+
+  ([coll] (offload-to-s3 (get-s3-client) coll)))
 

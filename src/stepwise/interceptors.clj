@@ -1,7 +1,8 @@
 (ns stepwise.interceptors
   (:require [clojure.core.async :as async]
             [clojure.tools.logging :as log]
-            [stepwise.interceptors.s3-offload :as offload]))
+            [stepwise.interceptors.s3-offload :as offload]
+            [stepwise.client :as client]))
 
 ;; Send Heartbeat
 
@@ -50,11 +51,11 @@
 
 ;; Offload Payload
 
-(defn load-from-s3-interceptor-fn [s3-client]
+(defn load-from-s3-interceptor-fn []
   (fn [{request :request :as ctx}]
     (if (offload/payload-on-s3? request)
       (->> request
-           (offload/merge-request-with-offloaded-payload s3-client)
+           (offload/merge-request-with-offloaded-payload client/load-from-s3)
            (assoc ctx :request))
 
       ;; nothing was offloaded
@@ -66,18 +67,18 @@
 (defn- replace-vals-with-offloaded-s3-arn [s3-arn m]
   (replace-vals m {offload/stepwise-offload-tag s3-arn}))
 
-(defn offload-select-keys-to-s3-interceptor-fn [s3-client keyseq]
+(defn offload-select-keys-to-s3-interceptor-fn [keyseq]
   (fn [{response :response :as ctx}]
     (let [selected-map (select-keys response keyseq)
-          s3-arn       (offload/offload-to-s3 s3-client selected-map)]
-    (->> selected-map
-         (replace-vals-with-offloaded-s3-arn s3-arn)
-         (merge response)
-         (assoc ctx :response)))))
+          s3-arn       (client/offload-to-s3 selected-map)]
+      (->> selected-map
+           (replace-vals-with-offloaded-s3-arn s3-arn)
+           (merge response)
+           (assoc ctx :response)))))
 
-(defn offload-all-keys-to-s3-interceptor-fn [s3-client]
+(defn offload-all-keys-to-s3-interceptor-fn []
   (fn [{response :response :as ctx}]
-    (let [s3-arn (offload/offload-to-s3 s3-client response)]
+    (let [s3-arn (client/offload-to-s3 response)]
       (->> (replace-vals-with-offloaded-s3-arn s3-arn response)
            (assoc ctx :response)))))
 

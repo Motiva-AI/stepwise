@@ -21,19 +21,10 @@
 
     (first arns-set)))
 
-(defn load-from-s3 [s3-client coll]
-  ;; TODO
-  )
-
-(defn merge-request-with-offloaded-payload [s3-client request]
+(defn merge-request-with-offloaded-payload [load-from-s3-fn request]
   (->> request
        (parse-s3-arns)
        (ensure-single-s3-arn)
-       (load-from-s3 s3-client)
+       (load-from-s3-fn)
        (merge request)))
-
-
-(defn offload-to-s3 [s3-client coll]
-  ;; TODO
-  )
 

@@ -4,6 +4,7 @@
             [bond.james :as bond]
             [stepwise.interceptors :as i]
             [stepwise.interceptors.core :refer [well-formed-interceptor-tuple?]]
+            [stepwise.client :as client]
             [stepwise.interceptors.s3-offload :as offload]
             [stepwise.interceptors.s3-offload-test :refer [offloaded-map]]))
 
@@ -29,53 +30,51 @@
 (deftest send-heartbeat-every-n-seconds-interceptor-test
   (is (well-formed-interceptor-tuple? (i/send-heartbeat-every-n-seconds-interceptor 5))))
 
-(def s3-client-stub :s3-client-stub)
-
 (deftest load-from-s3-interceptor-fn-test
-  (is (fn? (i/load-from-s3-interceptor-fn s3-client-stub)))
+  (is (fn? (i/load-from-s3-interceptor-fn)))
 
-  (bond/with-stub! [[offload/load-from-s3 (fn [_ _] {:bar :soap})]]
+  (bond/with-stub! [[client/load-from-s3 (fn [_] {:bar :soap})]]
     (testing "no key is offloaded"
       (is (= {:request {:foo 3
                         :bar :soap}}
-             ((i/load-from-s3-interceptor-fn s3-client-stub)
+             ((i/load-from-s3-interceptor-fn)
               {:request {:foo 3
                          :bar :soap}}))))
 
     (testing "with some keys offloaded"
       (is (= {:request {:foo 3
                         :bar :soap}}
-             ((i/load-from-s3-interceptor-fn s3-client-stub)
+             ((i/load-from-s3-interceptor-fn)
               {:request {:foo 3
                          :bar offloaded-map}})))))
 
   (testing "all keys offloaded"
-    (bond/with-stub! [[offload/load-from-s3 (fn [_ _] {:foo 3 :bar :soap})]]
+    (bond/with-stub! [[client/load-from-s3 (fn [_] {:foo 3 :bar :soap})]]
       (is (= {:request {:foo 3
                         :bar :soap}}
-             ((i/load-from-s3-interceptor-fn s3-client-stub)
+             ((i/load-from-s3-interceptor-fn)
               {:request {:foo offloaded-map
                          :bar offloaded-map}}))))))
 
-(defn offload-to-s3-mock [_ _] :this-is-an-arn)
+(defn offload-to-s3-mock [_] :this-is-an-arn)
 
 (deftest offload-select-keys-to-s3-interceptor-fn-test
-  (is (fn? (i/offload-select-keys-to-s3-interceptor-fn s3-client-stub [:bar])))
+  (is (fn? (i/offload-select-keys-to-s3-interceptor-fn [:bar])))
 
-  (bond/with-stub! [[offload/offload-to-s3 offload-to-s3-mock]]
+  (bond/with-stub! [[client/offload-to-s3 offload-to-s3-mock]]
     (is (= {:response {:foo 3
                        :bar offloaded-map}}
-           ((i/offload-select-keys-to-s3-interceptor-fn s3-client-stub [:bar])
+           ((i/offload-select-keys-to-s3-interceptor-fn [:bar])
             {:response {:foo 3
                         :bar :soap}})))))
 
 (deftest offload-all-keys-to-s3-interceptor-fn-test
-  (is (fn? (i/offload-all-keys-to-s3-interceptor-fn s3-client-stub)))
+  (is (fn? (i/offload-all-keys-to-s3-interceptor-fn)))
 
-  (bond/with-stub! [[offload/offload-to-s3 offload-to-s3-mock]]
+  (bond/with-stub! [[client/offload-to-s3 offload-to-s3-mock]]
     (is (= {:response {:foo offloaded-map
                        :bar offloaded-map}}
-           ((i/offload-all-keys-to-s3-interceptor-fn s3-client-stub)
+           ((i/offload-all-keys-to-s3-interceptor-fn)
             {:response {:foo 3
                         :bar :soap}})))))
 
