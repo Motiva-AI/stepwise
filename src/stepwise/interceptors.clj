@@ -61,24 +61,16 @@
       ;; nothing was offloaded
       ctx)))
 
-(defn- replace-vals [m v]
-  (into {} (for [[k _] m] [k v])))
-
-(defn- replace-vals-with-offloaded-s3-arn [s3-arn m]
-  (replace-vals m {offload/stepwise-offload-tag s3-arn}))
-
 (defn offload-select-keys-to-s3-interceptor-fn [keyseq]
   (fn [{response :response :as ctx}]
-    (let [selected-map (select-keys response keyseq)
-          s3-arn       (client/offload-to-s3 selected-map)]
-      (->> selected-map
-           (replace-vals-with-offloaded-s3-arn s3-arn)
-           (merge response)
-           (assoc ctx :response)))))
+    (->> (select-keys response keyseq)
+         (offload/replace-vals-with-offloaded-s3-arn client/offload-to-s3)
+         (merge response)
+         (assoc ctx :response))))
 
 (defn offload-all-keys-to-s3-interceptor-fn []
   (fn [{response :response :as ctx}]
-    (let [s3-arn (client/offload-to-s3 response)]
-      (->> (replace-vals-with-offloaded-s3-arn s3-arn response)
-           (assoc ctx :response)))))
+    (->> response
+         (offload/replace-vals-with-offloaded-s3-arn client/offload-to-s3)
+         (assoc ctx :response))))
 

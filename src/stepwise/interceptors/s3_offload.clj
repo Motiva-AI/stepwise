@@ -28,3 +28,10 @@
        (load-from-s3-fn)
        (merge request)))
 
+(defn- replace-vals [m v]
+  (into {} (for [[k _] m] [k v])))
+
+(defn replace-vals-with-offloaded-s3-arn [offload-to-s3-fn m]
+  (let [s3-arn (offload-to-s3-fn m)]
+    (replace-vals m {stepwise-offload-tag s3-arn})))
+
