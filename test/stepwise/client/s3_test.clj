@@ -17,3 +17,9 @@
                (s3/slurp-bytes)
                (String.))))))
 
+(deftest ser-de-round-trip-test
+  (let [msg "test 123"
+        ser (s3/serialize msg)]
+    (is (bytes? ser))
+    (is (= msg (s3/deseralize ser)))))
+

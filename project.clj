@@ -32,5 +32,6 @@
                  [com.amazonaws/aws-java-sdk-stepfunctions "1.12.13"]
                  [com.cognitect.aws/api "0.8.515"]
                  [com.cognitect.aws/endpoints "1.1.12.13"]
-                 [com.cognitect.aws/s3 "811.2.934.0"]])
+                 [com.cognitect.aws/s3 "811.2.934.0"]
+                 [com.taoensso/nippy "3.1.1"]])
 

@@ -1,6 +1,7 @@
 (ns stepwise.client.s3
   (:require [clojure.string]
-            [clojure.java.io]))
+            [clojure.java.io]
+            [taoensso.nippy :as nippy]))
 
 (defn parse-s3-bucket-and-key-from-arn [arn]
   (-> arn
@@ -17,4 +18,10 @@
               in  (clojure.java.io/input-stream x)]
     (clojure.java.io/copy in out)
     (.toByteArray out)))
+
+(defn serialize [coll]
+  (nippy/freeze coll))
+
+(defn deseralize [bytes-array]
+  (nippy/thaw bytes-array))
 
