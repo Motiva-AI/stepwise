@@ -3,13 +3,17 @@
             [clojure.java.io]
             [taoensso.nippy :as nippy]))
 
-(defn parse-s3-bucket-and-key-from-arn [arn]
-  (-> arn
-      (clojure.string/split #":::")
-      (last)
-      (clojure.string/split #"/")
+(def bucket-key-separator "/")
+
+(defn parse-s3-bucket-and-key [s]
+  (-> s
+      (clojure.string/split (re-pattern bucket-key-separator))
       (some->> (remove empty?)
                (zipmap [:Bucket :Key]))))
+
+(defn unparse-s3-bucket-and-key [{bucket-name :Bucket object-key :Key}]
+  (when (and bucket-name object-key)
+    (str bucket-name bucket-key-separator object-key)))
 
 (defn slurp-bytes
   "Slurp bytes from any one of InputStream, File, URI, URL, Socket, byte array, or String."

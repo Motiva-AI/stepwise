@@ -4,10 +4,14 @@
 
             [clojure.java.io]))
 
-(deftest parse-s3-bucket-and-key-from-arn-test
-  (is (= {} (s3/parse-s3-bucket-and-key-from-arn "")))
-  (is (= {:Bucket "MyBucket", :Key "data.json"}
-         (s3/parse-s3-bucket-and-key-from-arn "arn:aws:s3:::MyBucket/data.json"))))
+(deftest parse-s3-bucket-and-key-test
+  (is (= {} (s3/parse-s3-bucket-and-key "")))
+  (is (nil? (s3/unparse-s3-bucket-and-key {})))
+
+  (let [m {:Bucket "MyBucket", :Key "data.json"}
+        expected-str (str "MyBucket" s3/bucket-key-separator "data.json")]
+    (is (= expected-str (s3/unparse-s3-bucket-and-key m)))
+    (is (= m (s3/parse-s3-bucket-and-key expected-str)))))
 
 (deftest slurp-bytes-test
   (let [msg "test 123"]
