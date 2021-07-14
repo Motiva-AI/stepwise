@@ -1,8 +1,9 @@
-(ns stepwise.client.s3-test
-  (:require [clojure.test :refer [deftest is]]
-            [stepwise.client.s3 :as s3]
+(ns stepwise.s3-test
+  (:require [clojure.test :refer :all]
+            [stepwise.s3 :as s3]))
 
-            [clojure.java.io]))
+(def bucket-name "stepwise-integration-test")
+
 
 (deftest parse-s3-bucket-and-key-test
   (is (= {} (s3/parse-s3-bucket-and-key "")))
@@ -26,4 +27,12 @@
         ser (s3/serialize msg)]
     (is (bytes? ser))
     (is (= msg (s3/deseralize ser)))))
+
+;; TODO setup integration envs on CI
+#_(deftest ^:integration offload-to-s3-round-trip-test
+  (let [coll {:foo 3
+              :bar :soap}
+        key (s3/offload-to-s3 bucket-name coll)]
+    (is (string? key))
+    (is (= coll (s3/load-from-s3 (str bucket-name s3/bucket-key-separator key))))))
 

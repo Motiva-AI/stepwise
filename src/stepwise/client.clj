@@ -1,17 +1,12 @@
 (ns stepwise.client
   (:require [stepwise.model :as mdl]
-            [stepwise.client.s3 :as s3]
-            [clojure.core.async :as async]
-
-            [cognitect.aws.client.api :as aws])
+            [clojure.core.async :as async])
   (:import (com.amazonaws.services.stepfunctions AWSStepFunctionsClient
                                                  AWSStepFunctionsClientBuilder)
            (com.amazonaws ClientConfiguration)
            (com.amazonaws.services.stepfunctions.builder StateMachine)))
 
 (set! *warn-on-reflection* true)
-
-;; SFN client
 
 (def default-client
   (atom nil))
@@ -269,44 +264,4 @@
                  ~items-key
                  ~(vec (rest request-form))
                  ~xform)))
-
-;; S3 client
-
-(def stock-s3-client (delay (aws/client {:api :s3})))
-
-(defn get-s3-client []
-  @stock-s3-client)
-
-(defn load-from-s3
-  ([s3-client source]
-   (->> (s3/parse-s3-bucket-and-key source)
-        (hash-map :op :GetObject :request)
-        (aws/invoke s3-client)
-        (:Body)
-        (s3/slurp-bytes)
-        (s3/deseralize)))
-
-  ([source-arn] (load-from-s3 (get-s3-client) source-arn)))
-
-(defn- put-object-request [bucket-name key bytes-array]
-  {:Bucket bucket-name
-   :Key    key
-   :Body   bytes-array})
-
-(defn- generate-s3-object-key []
-  (str (java.util.UUID/randomUUID) ".nippy"))
-
-(defn offload-to-s3
-  "Returns generated object-key"
-  ([s3-client bucket-name coll]
-   (let [object-key (generate-s3-object-key)]
-     (->> coll
-          (s3/serialize)
-          (put-object-request bucket-name object-key)
-          (hash-map :op :PutObject :request)
-          (aws/invoke s3-client))
-
-     object-key))
-
-  ([bucket-name coll] (offload-to-s3 (get-s3-client) bucket-name coll)))
 
