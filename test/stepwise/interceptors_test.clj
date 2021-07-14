@@ -5,8 +5,7 @@
             [stepwise.interceptors :as i]
             [stepwise.interceptors.core :refer [well-formed-interceptor-tuple?]]
             [stepwise.s3 :as s3]
-            [stepwise.interceptors.s3-offload :as offload]
-            [stepwise.interceptors.s3-offload-test :refer [offloaded-map]]))
+            [stepwise.interceptors.s3-offload :as offload]))
 
 (defn- heartbeat-fn [] :foo)
 (defn- failing-heartbeat-fn [] (throw (Exception. "testing failure mode")))
@@ -30,6 +29,8 @@
 (deftest send-heartbeat-every-n-seconds-interceptor-test
   (is (well-formed-interceptor-tuple? (i/send-heartbeat-every-n-seconds-interceptor 5))))
 
+(def test-path "some-bucket/some-key")
+
 (deftest load-from-s3-interceptor-fn-test
   (is (fn? (i/load-from-s3-interceptor-fn)))
 
@@ -46,17 +47,17 @@
                         :bar :soap}}
              ((i/load-from-s3-interceptor-fn)
               {:request {:foo 3
-                         :bar offloaded-map}})))))
+                         :bar (offload/stepwise-offloaded-map test-path)}})))))
 
   (testing "all keys offloaded"
     (bond/with-stub! [[s3/load-from-s3 (fn [_] {:foo 3 :bar :soap})]]
       (is (= {:request {:foo 3
                         :bar :soap}}
              ((i/load-from-s3-interceptor-fn)
-              {:request {:foo offloaded-map
-                         :bar offloaded-map}}))))))
+              {:request {:foo (offload/stepwise-offloaded-map test-path)
+                         :bar (offload/stepwise-offloaded-map test-path)}}))))))
 
-(defn offload-to-s3-mock [_ _] :this-is-an-arn)
+(def offload-to-s3-mock (constantly test-path))
 (def bucket-name "some-bucket-name")
 
 (deftest offload-select-keys-to-s3-interceptor-fn-test
@@ -64,7 +65,7 @@
 
   (bond/with-stub! [[s3/offload-to-s3 offload-to-s3-mock]]
     (is (= {:response {:foo 3
-                       :bar offloaded-map}}
+                       :bar (offload/stepwise-offloaded-map test-path)}}
            ((i/offload-select-keys-to-s3-interceptor-fn bucket-name [:bar])
             {:response {:foo 3
                         :bar :soap}})))))
@@ -73,8 +74,8 @@
   (is (fn? (i/offload-all-keys-to-s3-interceptor-fn bucket-name)))
 
   (bond/with-stub! [[s3/offload-to-s3 offload-to-s3-mock]]
-    (is (= {:response {:foo offloaded-map
-                       :bar offloaded-map}}
+    (is (= {:response {:foo (offload/stepwise-offloaded-map test-path)
+                       :bar (offload/stepwise-offloaded-map test-path)}}
            ((i/offload-all-keys-to-s3-interceptor-fn bucket-name)
             {:response {:foo 3
                         :bar :soap}})))))

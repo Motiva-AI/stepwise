@@ -2,25 +2,25 @@
   (:require [clojure.test :refer [deftest is]]
             [stepwise.interceptors.s3-offload :as offload]))
 
-(def offloaded-map {offload/stepwise-offload-tag :this-is-an-arn})
+(def test-path "MyBucket/some-key")
 
-(deftest parse-s3-arns-test
-  (is (empty? (offload/parse-s3-arns {})))
-  (is (empty? (offload/parse-s3-arns {:foo :bar})))
-  (is (= [:this-is-an-arn]
-         (offload/parse-s3-arns {:foo offloaded-map})))
-  (is (= [:this-is-an-arn :this-is-an-arn]
-         (offload/parse-s3-arns {:foo offloaded-map
-                                 :bar offloaded-map}))))
+(deftest parse-s3-paths-test
+  (is (empty? (offload/parse-s3-paths {})))
+  (is (empty? (offload/parse-s3-paths {:foo :bar})))
+  (is (= [test-path]
+         (offload/parse-s3-paths {:foo (offload/stepwise-offloaded-map test-path)})))
+  (is (= [test-path test-path]
+         (offload/parse-s3-paths {:foo (offload/stepwise-offloaded-map test-path)
+                                  :bar (offload/stepwise-offloaded-map test-path)}))))
 
 (deftest payload-on-s3?-test
   (is (false? (offload/payload-on-s3? {})))
   (is (false? (offload/payload-on-s3? {:foo :bar})))
-  (is (true? (offload/payload-on-s3? {:foo offloaded-map})))
-  (is (true? (offload/payload-on-s3? {:foo offloaded-map
-                                      :bar offloaded-map}))))
+  (is (true? (offload/payload-on-s3? {:foo (offload/stepwise-offloaded-map test-path)})))
+  (is (true? (offload/payload-on-s3? {:foo (offload/stepwise-offloaded-map test-path)
+                                      :bar (offload/stepwise-offloaded-map test-path)}))))
 
-(deftest ensure-single-s3-arn-test
-  (is (= :arn (offload/ensure-single-s3-arn [:arn])))
-  (is (= :arn (offload/ensure-single-s3-arn [:arn :arn])))
-  (is (thrown? java.lang.AssertionError (offload/ensure-single-s3-arn [:arn :arn :another-arn]))))
+(deftest ensure-single-s3-path-test
+  (is (= test-path (offload/ensure-single-s3-path [test-path])))
+  (is (= test-path (offload/ensure-single-s3-path [test-path test-path])))
+  (is (thrown? java.lang.AssertionError (offload/ensure-single-s3-path [test-path test-path "some-other/path"]))))

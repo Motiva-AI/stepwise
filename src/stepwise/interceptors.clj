@@ -64,13 +64,13 @@
 (defn offload-select-keys-to-s3-interceptor-fn [s3-bucket-name keyseq]
   (fn [{response :response :as ctx}]
     (->> (select-keys response keyseq)
-         (offload/replace-vals-with-offloaded-s3-arn (partial s3/offload-to-s3 s3-bucket-name))
+         (offload/replace-vals-with-offloaded-s3-path (partial s3/offload-to-s3 s3-bucket-name))
          (merge response)
          (assoc ctx :response))))
 
 (defn offload-all-keys-to-s3-interceptor-fn [s3-bucket-name]
   (fn [{response :response :as ctx}]
     (->> response
-         (offload/replace-vals-with-offloaded-s3-arn (partial s3/offload-to-s3 s3-bucket-name))
+         (offload/replace-vals-with-offloaded-s3-path (partial s3/offload-to-s3 s3-bucket-name))
          (assoc ctx :response))))
 
