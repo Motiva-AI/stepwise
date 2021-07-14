@@ -18,7 +18,7 @@
 (defn ensure-single-s3-path [paths]
   (let [paths-set (into #{} paths)]
     (assert (= 1 (count paths-set))
-            (format "Expecting only one path, but multiple S3 paths [%s] are parsed from request" paths-set))
+            (format "Expecting only one distinct path, but multiple different S3 paths #{%s} are parsed from request" paths-set))
 
     (first paths-set)))
 
