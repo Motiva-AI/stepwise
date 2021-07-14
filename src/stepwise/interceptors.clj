@@ -54,9 +54,7 @@
 (defn load-from-s3-interceptor-fn []
   (fn [{request :request :as ctx}]
     (if (offload/payload-on-s3? request)
-      (->> request
-           (offload/merge-request-with-offloaded-payload s3/load-from-s3)
-           (assoc ctx :request))
+      (update ctx :request (partial offload/merge-request-with-offloaded-payload s3/load-from-s3))
 
       ;; nothing was offloaded
       ctx)))
@@ -69,8 +67,6 @@
          (assoc ctx :response))))
 
 (defn offload-all-keys-to-s3-interceptor-fn [s3-bucket-name]
-  (fn [{response :response :as ctx}]
-    (->> response
-         (offload/replace-vals-with-offloaded-s3-path (partial s3/offload-to-s3 s3-bucket-name))
-         (assoc ctx :response))))
+  (fn [ctx]
+    (update ctx :response (partial offload/replace-vals-with-offloaded-s3-path (partial s3/offload-to-s3 s3-bucket-name)))))
 
