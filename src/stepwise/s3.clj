@@ -64,7 +64,7 @@
           (hash-map :op :PutObject :request)
           (aws/invoke s3-client))
 
-     object-key))
+     (unparse-s3-bucket-and-key {:Bucket bucket-name :Key object-key})))
 
   ([bucket-name coll] (offload-to-s3 (get-s3-client) bucket-name coll)))
 

@@ -34,5 +34,6 @@
               :bar :soap}
         key (s3/offload-to-s3 bucket-name coll)]
     (is (string? key))
-    (is (= coll (s3/load-from-s3 (str bucket-name s3/bucket-key-separator key))))))
+    (is (re-seq (re-pattern bucket-name) key))
+    (is (= coll (s3/load-from-s3 key)))))
 
