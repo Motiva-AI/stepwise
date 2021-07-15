@@ -1,6 +1,6 @@
 (ns stepwise.interceptors.s3-offload)
 
-(def stepwise-offload-tag :stepwise/offloaded-to-s3)
+(def stepwise-offload-tag :stepwise-offloaded-to-s3)
 (defn stepwise-offloaded-map [s3-path]
   {stepwise-offload-tag s3-path})
 
