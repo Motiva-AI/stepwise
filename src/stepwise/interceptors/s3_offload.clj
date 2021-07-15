@@ -35,7 +35,10 @@
 (defn- replace-vals [m v]
   (into {} (for [[k _] m] [k v])))
 
-(defn replace-vals-with-offloaded-s3-path [offload-to-s3-fn m]
-  (let [s3-path (offload-to-s3-fn m)]
-    (replace-vals m (stepwise-offloaded-map s3-path))))
+(defn replace-vals-with-offloaded-s3-path [offload-to-s3-fn coll]
+  (if (and (map? coll) (not-empty coll))
+    (let [s3-path (offload-to-s3-fn coll)]
+      (replace-vals coll (stepwise-offloaded-map s3-path)))
+
+    coll))
 
