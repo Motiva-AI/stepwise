@@ -1,4 +1,4 @@
-(defproject ai.motiva/stepwise "0.6.0"
+(defproject ai.motiva/stepwise "0.7.0-SNAPSHOT"
   :description "Clojure AWS Step Functions library"
   :url "https://github.com/Motiva-AI/stepwise"
   :license {:name "Eclipse Public License"
@@ -29,5 +29,9 @@
                  [metosin/sieppari "0.0.0-alpha13"]
                  [com.amazonaws/aws-java-sdk-iam "1.12.13"]
                  [com.amazonaws/aws-java-sdk-sts "1.12.13"]
-                 [com.amazonaws/aws-java-sdk-stepfunctions "1.12.13"]])
+                 [com.amazonaws/aws-java-sdk-stepfunctions "1.12.13"]
+                 [com.cognitect.aws/api "0.8.515"]
+                 [com.cognitect.aws/endpoints "1.1.12.13"]
+                 [com.cognitect.aws/s3 "811.2.934.0"]
+                 [com.taoensso/nippy "3.1.1"]])
 
