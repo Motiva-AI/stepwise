@@ -24,3 +24,9 @@
   (is (= test-path (offload/ensure-single-s3-path [test-path])))
   (is (= test-path (offload/ensure-single-s3-path [test-path test-path])))
   (is (thrown? java.lang.AssertionError (offload/ensure-single-s3-path [test-path test-path "some-other/path"]))))
+
+(deftest offload-select-keys-to-s3-test
+  (is (= {:x (offload/stepwise-offloaded-map test-path)
+          :y (offload/stepwise-offloaded-map test-path)}
+         (offload/offload-select-keys {:x 1 :y 1} [:x :y] (constantly test-path)))))
+

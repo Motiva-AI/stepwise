@@ -42,3 +42,8 @@
 
     coll))
 
+(defn offload-select-keys [coll keyseq offload-fn]
+  (->> (select-keys coll keyseq)
+       (replace-vals-with-offloaded-s3-path offload-fn)
+       (merge coll)))
+

@@ -52,11 +52,8 @@
 ;; Offload Payload
 
 (defn offload-select-keys-to-s3-interceptor-fn [s3-bucket-name keyseq]
-  (fn [{response :response :as ctx}]
-    (->> (select-keys response keyseq)
-         (offload/replace-vals-with-offloaded-s3-path (partial s3/offload-to-s3 s3-bucket-name))
-         (merge response)
-         (assoc ctx :response))))
+  (fn [ctx]
+    (update ctx :response #(offload/offload-select-keys % keyseq (partial s3/offload-to-s3 s3-bucket-name)))))
 
 (defn offload-all-keys-to-s3-interceptor-fn [s3-bucket-name]
   (fn [ctx]
