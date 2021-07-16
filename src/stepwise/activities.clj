@@ -43,19 +43,23 @@
                [activity-name (ensure activity-name)]))
         activity-names))
 
-(defn compile [handler]
+(defn- ensure-interceptor-map [handler]
   (if (fn? handler)
-    handler
-    (interceptors/compile
-      (vec (:interceptors handler))
-      (get handler
-           :handler-fn
-           identity))))
+    {:handler-fn handler
+     :interceptors []}
+    handler))
+
+(defn compile [handler]
+  (interceptors/compile
+    (vec (:interceptors handler))
+    (get handler
+         :handler-fn
+         identity)))
 
 (defn compile-all [activity->handler]
   (into {}
         (map (fn [[activity handler]]
-               [activity (compile handler)]))
+               [activity (-> handler (ensure-interceptor-map) (compile))]))
         activity->handler))
 
 (defn invoke [activity->handler activity-name input]

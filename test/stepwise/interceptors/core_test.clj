@@ -7,16 +7,20 @@
   [:inc-x
    {:enter (fn [ctx] (update-in ctx [:request :x] inc))}])
 
-(defn handler [request]
+(defn inc-handler [request]
   {:y (inc (:x request))})
 
 (defn execute [queue task]
-  ((main/compile queue handler) task (fn [])))
+  ((main/compile queue inc-handler) task (fn [])))
 
 (deftest compile-test
   (testing "interceptor with handler-fn"
     (is (= {:y 42}
            (execute [inc-x-interceptor-tuple] {:x 40}))))
+
+  (testing "empty interceptor chain should work"
+    (is (= {:y 41}
+           (execute [] {:x 40}))))
 
   (testing "send-heartbeat-fn is associated to internal context"
     (execute [[:check-heartbeat-fn
