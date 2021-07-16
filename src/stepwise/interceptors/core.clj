@@ -58,12 +58,11 @@
   [named-chain handler-fn]
   (assert-named-chain named-chain)
 
-  (with-meta (fn [input send-heartbeat-fn]
-               (s/execute
-                 (->> named-chain
-                      (interceptor-tuples->interceptors)
-                      (prepend-this-interceptor-to-interceptor-chain (assoc-send-heartbeat-fn-to-context-interceptor send-heartbeat-fn))
-                      (form-interceptor-chain handler-fn))
-                 input))
-             {:heartbeat? true}))
+  (fn [input send-heartbeat-fn]
+    (s/execute
+      (->> named-chain
+           (interceptor-tuples->interceptors)
+           (prepend-this-interceptor-to-interceptor-chain (assoc-send-heartbeat-fn-to-context-interceptor send-heartbeat-fn))
+           (form-interceptor-chain handler-fn))
+      input)))
 
