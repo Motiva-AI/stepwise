@@ -38,32 +38,43 @@
                       max-cause-length)
             "")})
 
+(defn- handler-fn-failed [activity-arn task error]
+  (log/info error
+            "Activity task failed"
+            (prn-str (maps/syms->map activity-arn task)))
+  (client/send-task-failure (::mdl/task-token task)
+                            (exception->failure-map error)))
+
+(defn- handler-fn-succeeded [activity-arn task result]
+  (log/info "Activity task completed"
+            (prn-str (maps/syms->map activity-arn task result)))
+  (client/send-task-success (::mdl/task-token task)
+                            result))
+
+(defn- handle-result [activity-arn task result]
+  (try
+    (if (instance? Throwable result)
+      (handler-fn-failed activity-arn task result)
+      (handler-fn-succeeded activity-arn task result))
+
+    (catch Throwable e
+      (log/error e
+                 "Failed to send activity task result"
+                 (prn-str (maps/syms->map activity-arn task result))))))
+
 (defn handle [activity-arn task handler-fn]
   (let [chan (async/chan)]
     [chan (future (log/debug "Handling activity task"
                              {:arn  activity-arn
                               :task task})
-                  (let [result (try (handler-fn (::mdl/input task)
-                                                #(client/send-task-heartbeat (::mdl/task-token task)))
-                                    (catch Throwable e e))]
-                    (when-not (.isInterrupted (Thread/currentThread))
-                      (try
-                        (if (instance? Throwable result)
-                          (do
-                            (log/info result
-                                      "Activity task failed"
-                                      (prn-str (maps/syms->map activity-arn task)))
-                            (client/send-task-failure (::mdl/task-token task)
-                                                      (exception->failure-map result)))
-                          (do
-                            (log/info "Activity task completed"
-                                      (prn-str (maps/syms->map activity-arn task result)))
-                            (client/send-task-success (::mdl/task-token task)
-                                                      result)))
-                        (catch Throwable e
-                          (log/error e
-                                     "Failed to send activity task result"
-                                     (prn-str (maps/syms->map activity-arn task result)))))))
+
+                  (when-not (.isInterrupted (Thread/currentThread))
+                    (let [result (try (handler-fn (::mdl/input task)
+                                                  #(client/send-task-heartbeat (::mdl/task-token task)))
+                                      (catch Throwable e e))]
+                      (handle-result activity-arn task result)))
+
+                  ;; thread is interrupted
                   (async/>!! chan :done)
                   (async/close! chan))]))
 
