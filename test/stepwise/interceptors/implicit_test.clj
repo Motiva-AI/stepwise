@@ -5,7 +5,7 @@
             [stepwise.s3 :as s3]))
 
 (defn execute [interceptor ctx]
-  ((:enter (interceptor)) ctx))
+  ((:enter (second (interceptor))) ctx))
 
 (def test-path "some-bucket/some-key")
 
