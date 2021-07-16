@@ -33,23 +33,24 @@
 (def offload-to-s3-mock (constantly test-path))
 (def bucket-name "some-bucket-name")
 
-(deftest offload-select-keys-to-s3-interceptor-fn-test
-  (is (fn? (i/offload-select-keys-to-s3-interceptor-fn bucket-name [:bar])))
+(defn execute [interceptor ctx]
+  ((:leave (second (interceptor))) ctx))
 
+(deftest offload-select-keys-to-s3-interceptor-fn-test
   (bond/with-stub! [[s3/offload-to-s3 offload-to-s3-mock]]
     (is (= {:response {:foo 3
                        :bar (s3/stepwise-offloaded-map test-path)}}
-           ((i/offload-select-keys-to-s3-interceptor-fn bucket-name [:bar])
-            {:response {:foo 3
-                        :bar :soap}})))))
+           (execute
+             (partial i/offload-select-keys-to-s3-interceptor bucket-name [:bar])
+             {:response {:foo 3
+                         :bar :soap}})))))
 
 (deftest offload-all-keys-to-s3-interceptor-fn-test
-  (is (fn? (i/offload-all-keys-to-s3-interceptor-fn bucket-name)))
-
   (bond/with-stub! [[s3/offload-to-s3 offload-to-s3-mock]]
     (is (= {:response {:foo (s3/stepwise-offloaded-map test-path)
                        :bar (s3/stepwise-offloaded-map test-path)}}
-           ((i/offload-all-keys-to-s3-interceptor-fn bucket-name)
-            {:response {:foo 3
-                        :bar :soap}})))))
+           (execute
+             (partial i/offload-all-keys-to-s3-interceptor bucket-name)
+             {:response {:foo 3
+                         :bar :soap}})))))
 
