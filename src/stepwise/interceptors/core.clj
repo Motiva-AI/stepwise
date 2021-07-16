@@ -42,9 +42,9 @@
 (defn- interceptor-tuples->interceptors [interceptor-tuples]
   (map second interceptor-tuples))
 
-(defn- prepend-this-interceptor-to-interceptor-chain [this-interceptor chain]
-  (cons this-interceptor
-        chain))
+(defn- prepend-these-interceptors-to-interceptor-chain [interceptors chain]
+  (concat interceptors
+          chain))
 
 (defn- form-interceptor-chain [handler-fn interceptors]
   (concat interceptors [handler-fn]))
@@ -59,8 +59,9 @@
     (s/execute
       (->> named-chain
            (interceptor-tuples->interceptors)
-           (prepend-this-interceptor-to-interceptor-chain (ii/load-from-s3-interceptor))
-           (prepend-this-interceptor-to-interceptor-chain (ii/assoc-send-heartbeat-fn-to-context-interceptor send-heartbeat-fn))
+           (prepend-these-interceptors-to-interceptor-chain
+             [(ii/assoc-send-heartbeat-fn-to-context-interceptor send-heartbeat-fn)
+              (ii/load-from-s3-interceptor)])
            (form-interceptor-chain handler-fn))
       input)))
 
