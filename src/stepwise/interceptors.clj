@@ -51,14 +51,6 @@
 
 ;; Offload Payload
 
-(defn load-from-s3-interceptor-fn []
-  (fn [{request :request :as ctx}]
-    (if (offload/payload-on-s3? request)
-      (update ctx :request (partial offload/merge-request-with-offloaded-payload s3/load-from-s3))
-
-      ;; nothing was offloaded
-      ctx)))
-
 (defn offload-select-keys-to-s3-interceptor-fn [s3-bucket-name keyseq]
   (fn [{response :response :as ctx}]
     (->> (select-keys response keyseq)

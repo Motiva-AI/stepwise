@@ -31,32 +31,6 @@
 
 (def test-path "some-bucket/some-key")
 
-(deftest load-from-s3-interceptor-fn-test
-  (is (fn? (i/load-from-s3-interceptor-fn)))
-
-  (bond/with-stub! [[s3/load-from-s3 (fn [_] {:bar :soap})]]
-    (testing "no key is offloaded"
-      (is (= {:request {:foo 3
-                        :bar :soap}}
-             ((i/load-from-s3-interceptor-fn)
-              {:request {:foo 3
-                         :bar :soap}}))))
-
-    (testing "with some keys offloaded"
-      (is (= {:request {:foo 3
-                        :bar :soap}}
-             ((i/load-from-s3-interceptor-fn)
-              {:request {:foo 3
-                         :bar (offload/stepwise-offloaded-map test-path)}})))))
-
-  (testing "all keys offloaded"
-    (bond/with-stub! [[s3/load-from-s3 (fn [_] {:foo 3 :bar :soap})]]
-      (is (= {:request {:foo 3
-                        :bar :soap}}
-             ((i/load-from-s3-interceptor-fn)
-              {:request {:foo (offload/stepwise-offloaded-map test-path)
-                         :bar (offload/stepwise-offloaded-map test-path)}}))))))
-
 (def offload-to-s3-mock (constantly test-path))
 (def bucket-name "some-bucket-name")
 
