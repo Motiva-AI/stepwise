@@ -2,7 +2,6 @@
   (:require [stepwise.client :as client]
             [stepwise.iam :as iam]
             [stepwise.s3 :as s3]
-            [stepwise.interceptors.s3-offload :as offload] ;; this looks over-reaching
             [stepwise.sugar :as sgr]
             [stepwise.activities :as activities]
             [stepwise.workers :as workers]
@@ -121,6 +120,5 @@
   (async/>!! (:terminate-chan workers) :kill)
   (wait-all-exit!! workers))
 
-(defn offload-select-keys-to-s3 [m keyseq bucket-name]
-  (offload/offload-select-keys m keyseq (partial s3/offload-to-s3 bucket-name)))
+(def offload-select-keys-to-s3 s3/offload-select-keys)
 

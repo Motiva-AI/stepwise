@@ -4,8 +4,7 @@
             [bond.james :as bond]
             [stepwise.interceptors :as i]
             [stepwise.interceptors.core :refer [well-formed-interceptor-tuple?]]
-            [stepwise.s3 :as s3]
-            [stepwise.interceptors.s3-offload :as offload]))
+            [stepwise.s3 :as s3]))
 
 (defn- heartbeat-fn [] :foo)
 (defn- failing-heartbeat-fn [] (throw (Exception. "testing failure mode")))
@@ -39,7 +38,7 @@
 
   (bond/with-stub! [[s3/offload-to-s3 offload-to-s3-mock]]
     (is (= {:response {:foo 3
-                       :bar (offload/stepwise-offloaded-map test-path)}}
+                       :bar (s3/stepwise-offloaded-map test-path)}}
            ((i/offload-select-keys-to-s3-interceptor-fn bucket-name [:bar])
             {:response {:foo 3
                         :bar :soap}})))))
@@ -48,8 +47,8 @@
   (is (fn? (i/offload-all-keys-to-s3-interceptor-fn bucket-name)))
 
   (bond/with-stub! [[s3/offload-to-s3 offload-to-s3-mock]]
-    (is (= {:response {:foo (offload/stepwise-offloaded-map test-path)
-                       :bar (offload/stepwise-offloaded-map test-path)}}
+    (is (= {:response {:foo (s3/stepwise-offloaded-map test-path)
+                       :bar (s3/stepwise-offloaded-map test-path)}}
            ((i/offload-all-keys-to-s3-interceptor-fn bucket-name)
             {:response {:foo 3
                         :bar :soap}})))))

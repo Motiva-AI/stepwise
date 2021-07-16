@@ -62,7 +62,7 @@
            (interceptor-tuples->interceptors)
            (prepend-these-interceptors-to-interceptor-chain
              [(ii/assoc-send-heartbeat-fn-to-context-interceptor send-heartbeat-fn)
-              (ii/load-from-s3-interceptor s3/load-from-s3)])
+              (ii/load-from-s3-interceptor)])
            (form-interceptor-chain handler-fn))
       input)))
 

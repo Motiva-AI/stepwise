@@ -1,7 +1,6 @@
 (ns stepwise.interceptors
   (:require [clojure.core.async :as async]
             [clojure.tools.logging :as log]
-            [stepwise.interceptors.s3-offload :as offload]
             [stepwise.s3 :as s3]))
 
 ;; Send Heartbeat
@@ -53,9 +52,9 @@
 
 (defn offload-select-keys-to-s3-interceptor-fn [s3-bucket-name keyseq]
   (fn [ctx]
-    (update ctx :response #(offload/offload-select-keys % keyseq (partial s3/offload-to-s3 s3-bucket-name)))))
+    (update ctx :response #(s3/offload-select-keys % keyseq s3-bucket-name))))
 
 (defn offload-all-keys-to-s3-interceptor-fn [s3-bucket-name]
   (fn [ctx]
-    (update ctx :response (partial offload/replace-vals-with-offloaded-s3-path (partial s3/offload-to-s3 s3-bucket-name)))))
+    (update ctx :response (partial s3/replace-vals-with-offloaded-s3-path s3-bucket-name))))
 
