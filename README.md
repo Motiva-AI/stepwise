@@ -20,6 +20,7 @@ Implemented Features:
    [integrant](https://github.com/weavejester/integrant), or similar.
  * Tooling for [rapid development via code
    reloading](http://thinkrelevance.com/blog/2013/06/04/clojure-workflow-reloaded)
+ * [Offloading](#offloading-large-payload-to-s3) large payloads to S3
 
 Our production workflow orchestration is implemented using this library.
 
@@ -221,6 +222,28 @@ EDN
 You can also supply an ARN string for the resource to specify a lambda task or
 activity task managed outside of stepwise.
 
+## Offloading Large Payload to S3
+
+To offload some of your input to S3 before execution, call
+`stepwise/offload-select-keys-to-s3` like so,
+
+```clojure
+(as-> {:x 1 :y 1} $
+  (stepwise/offload-select-keys-to-s3 $ [:x :y] bucket-name)
+  (hash-map :input $)
+  (stepwise/start-execution!! :adder $))
+```
+
+Stepwise workers will automatically load these offloaded data from S3 for you.
+So that your activity worker can remain unchanged.
+
+```clojure
+(stepwise/start-workers! {:activity/add (fn [{:keys [x y]}] (+ x y)) })
+```
+
+To offload outputs between activities, use the [built-in offloading
+interceptors](#offload-all-keys-to-s3-interceptor).
+
 ## Interceptors
 
 Stepwise support [interceptors](http://pedestal.io/reference/interceptors) to
@@ -276,6 +299,36 @@ provided for use with the `:heartbeat-seconds` task setting. For example,
   {:activity/add {:handler-fn (fn [{:keys [x y]}] (Thread/sleep 10000) (+ x y))
                   :interceptors [(stepwise.interceptors/send-heartbeat-every-n-seconds-interceptor 1)]}})
 ```
+
+#### offload-select-keys-to-s3-interceptor
+
+Offload your activity output to S3. Any subsequent Stepwise activity would load
+them back for you automatically.
+
+Specify the keys that you want to offload to S3 like so,
+
+```clojure
+(stepwise/start-workers!
+  {:activity/add {:handler-fn (fn [{:keys [x y]}] {:z (+ x y)})
+                  :interceptors [(stepwise.interceptors/offload-select-keys-to-s3-interceptor "my-bucket-name" [:z])]}})
+```
+
+Note that the output needs to be a map for this interceptor to offload the
+values. Any non-map output would be ignored.
+
+#### offload-all-keys-to-s3-interceptor
+
+Similar to `offload-select-keys-to-s3-interceptor` but instead of selecting
+keys, this would offload all the output values.
+
+```clojure
+(stepwise/start-workers!
+  {:activity/add {:handler-fn (fn [{:keys [x y]}] {:z (+ x y)})
+                  :interceptors [(stepwise.interceptors/offload-all-keys-to-s3-interceptor "my-bucket-name")]}})
+```
+
+Note that the output needs to be a map for this interceptor to offload the
+values. Any non-map output would be ignored.
 
 ## License
 
