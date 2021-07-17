@@ -12,6 +12,10 @@ We use [Break Versioning][breakver]. The version numbers follow a `<major>.<mino
 
 [breakver]: https://github.com/ptaoussanis/encore/blob/master/BREAK-VERSIONING.md
 
+## 0.7.0 (TBD)
+
+* Added feature to [offload large payloads to S3](https://github.com/Motiva-AI/stepwise/pull/8)
+
 ## 0.6.0 (2021-06-26)
 
 * Project group is renamed to `ai.motiva/stepwise`

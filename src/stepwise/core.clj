@@ -1,6 +1,7 @@
 (ns stepwise.core
   (:require [stepwise.client :as client]
             [stepwise.iam :as iam]
+            [stepwise.s3 :as s3]
             [stepwise.sugar :as sgr]
             [stepwise.activities :as activities]
             [stepwise.workers :as workers]
@@ -118,4 +119,6 @@
 (defn kill-workers [workers]
   (async/>!! (:terminate-chan workers) :kill)
   (wait-all-exit!! workers))
+
+(def offload-select-keys-to-s3 s3/offload-select-keys)
 

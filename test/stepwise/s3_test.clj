@@ -1,9 +1,9 @@
 (ns stepwise.s3-test
   (:require [clojure.test :refer :all]
+            [bond.james :as bond]
             [stepwise.s3 :as s3]))
 
 (def bucket-name "stepwise-integration-test")
-
 
 (deftest parse-s3-bucket-and-key-test
   (is (= {} (s3/parse-s3-bucket-and-key "")))
@@ -36,4 +36,33 @@
     (is (string? key))
     (is (re-seq (re-pattern bucket-name) key))
     (is (= coll (s3/load-from-s3 key)))))
+
+(def test-path "MyBucket/some-key")
+
+(deftest parse-s3-paths-test
+  (is (empty? (s3/parse-s3-paths {})))
+  (is (empty? (s3/parse-s3-paths {:foo :bar})))
+  (is (= [test-path]
+         (s3/parse-s3-paths {:foo (s3/stepwise-offloaded-map test-path)})))
+  (is (= [test-path test-path]
+         (s3/parse-s3-paths {:foo (s3/stepwise-offloaded-map test-path)
+                                  :bar (s3/stepwise-offloaded-map test-path)}))))
+
+(deftest payload-on-s3?-test
+  (is (false? (s3/payload-on-s3? {})))
+  (is (false? (s3/payload-on-s3? {:foo :bar})))
+  (is (true? (s3/payload-on-s3? {:foo (s3/stepwise-offloaded-map test-path)})))
+  (is (true? (s3/payload-on-s3? {:foo (s3/stepwise-offloaded-map test-path)
+                                      :bar (s3/stepwise-offloaded-map test-path)}))))
+
+(deftest ensure-single-s3-path-test
+  (is (= test-path (s3/ensure-single-s3-path [test-path])))
+  (is (= test-path (s3/ensure-single-s3-path [test-path test-path])))
+  (is (thrown? java.lang.AssertionError (s3/ensure-single-s3-path [test-path test-path "some-other/path"]))))
+
+(deftest offload-select-keys-to-s3-test
+  (bond/with-stub! [[s3/offload-to-s3 (constantly test-path)]]
+    (is (= {:x (s3/stepwise-offloaded-map test-path)
+            :y (s3/stepwise-offloaded-map test-path)}
+           (s3/offload-select-keys {:x 1 :y 1} [:x :y] test-path)))))
 

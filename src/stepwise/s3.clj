@@ -7,9 +7,12 @@
 (def stock-s3-client (delay (aws/client {:api :s3})))
 (def bucket-key-separator "/")
 
+(def stepwise-offload-tag :stepwise-offloaded-to-s3)
+(defn stepwise-offloaded-map [s3-path]
+  {stepwise-offload-tag s3-path})
+
 (defn get-s3-client []
   @stock-s3-client)
-
 
 (defn parse-s3-bucket-and-key [s]
   (-> s
@@ -67,4 +70,47 @@
      (unparse-s3-bucket-and-key {:Bucket bucket-name :Key object-key})))
 
   ([bucket-name coll] (offload-to-s3 (get-s3-client) bucket-name coll)))
+
+(defn parse-s3-paths [m]
+  (->> m
+       (vals)
+       (map #(get % stepwise-offload-tag))
+       (filter identity)))
+
+(defn payload-on-s3? [m]
+  (-> (parse-s3-paths m)
+      (not-empty)
+      (boolean)))
+
+(defn ensure-single-s3-path [paths]
+  (let [paths-set (into #{} paths)]
+    (assert (= 1 (count paths-set))
+            (format "Expecting only one distinct path, but multiple different S3 paths #{%s} are parsed from request" paths-set))
+
+    (first paths-set)))
+
+(defn merge-request-with-offloaded-payload [request]
+  (->> request
+       (parse-s3-paths)
+       ;; TODO enable loading from multiple s3 paths. Use case: if the
+       ;; payload is offloaded in different activities and merged together via
+       ;; Step Function paths
+       (ensure-single-s3-path)
+       (load-from-s3)
+       (merge request)))
+
+(defn- replace-vals [m v]
+  (into {} (for [[k _] m] [k v])))
+
+(defn replace-vals-with-offloaded-s3-path [bucket-name coll]
+  (if (and (map? coll) (not-empty coll))
+    (let [s3-path (offload-to-s3 bucket-name coll)]
+      (replace-vals coll (stepwise-offloaded-map s3-path)))
+
+    coll))
+
+(defn offload-select-keys [coll keyseq bucket-name]
+  (->> (select-keys coll keyseq)
+       (replace-vals-with-offloaded-s3-path bucket-name)
+       (merge coll)))
 

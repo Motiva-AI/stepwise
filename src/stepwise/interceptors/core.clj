@@ -1,6 +1,8 @@
 (ns stepwise.interceptors.core
   (:refer-clojure :exclude [compile])
-  (:require [sieppari.core :as s]))
+  (:require [sieppari.core :as s]
+            [stepwise.interceptors.implicit :as ii]
+            [stepwise.s3 :as s3]))
 
 (defn well-formed-interceptor-tuple?
   "Interceptor-tuple should be a tuple of the form,
@@ -38,16 +40,12 @@
                       {:index index
                        :form  interceptor-tuple})))))
 
-(defn- assoc-send-heartbeat-fn-to-context-interceptor
-  [send-heartbeat-fn]
-  {:enter (fn [ctx] (assoc ctx :send-heartbeat-fn send-heartbeat-fn))})
-
 (defn- interceptor-tuples->interceptors [interceptor-tuples]
   (map second interceptor-tuples))
 
-(defn- prepend-this-interceptor-to-interceptor-chain [this-interceptor chain]
-  (cons this-interceptor
-        chain))
+(defn- prepend-these-interceptors-to-interceptor-chain [interceptors chain]
+  (concat interceptors
+          chain))
 
 (defn- form-interceptor-chain [handler-fn interceptors]
   (concat interceptors [handler-fn]))
@@ -61,8 +59,10 @@
   (fn [input send-heartbeat-fn]
     (s/execute
       (->> named-chain
+           (prepend-these-interceptors-to-interceptor-chain
+             [(ii/assoc-send-heartbeat-fn-to-context-interceptor send-heartbeat-fn)
+              (ii/load-from-s3-interceptor)])
            (interceptor-tuples->interceptors)
-           (prepend-this-interceptor-to-interceptor-chain (assoc-send-heartbeat-fn-to-context-interceptor send-heartbeat-fn))
            (form-interceptor-chain handler-fn))
       input)))
 
