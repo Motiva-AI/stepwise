@@ -72,15 +72,18 @@
   ([bucket-name coll] (offload-to-s3 (get-s3-client) bucket-name coll)))
 
 (defn parse-s3-paths [m]
-  (->> m
-       (vals)
-       (map #(get % stepwise-offload-tag))
-       (filter identity)))
+  (when (map? m)
+    (->> m
+         (vals)
+         (map #(get % stepwise-offload-tag))
+         (filter identity))))
 
 (defn payload-on-s3? [m]
-  (-> (parse-s3-paths m)
-      (not-empty)
-      (boolean)))
+  (try
+    (-> (parse-s3-paths m)
+        (not-empty)
+        (boolean))
+    (catch Exception _ false)))
 
 (defn ensure-single-s3-path [paths]
   (let [paths-set (into #{} paths)]

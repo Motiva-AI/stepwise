@@ -40,7 +40,10 @@
 (def test-path "MyBucket/some-key")
 
 (deftest parse-s3-paths-test
+  (is (nil? (s3/parse-s3-paths nil)))
+  (is (nil? (s3/parse-s3-paths 3)))
   (is (empty? (s3/parse-s3-paths {})))
+  (is (empty? (s3/parse-s3-paths {:foo nil})))
   (is (empty? (s3/parse-s3-paths {:foo :bar})))
   (is (= [test-path]
          (s3/parse-s3-paths {:foo (s3/stepwise-offloaded-map test-path)})))
@@ -49,6 +52,8 @@
                                   :bar (s3/stepwise-offloaded-map test-path)}))))
 
 (deftest payload-on-s3?-test
+  (is (false? (s3/payload-on-s3? nil)))
+  (is (false? (s3/payload-on-s3? 3)))
   (is (false? (s3/payload-on-s3? {})))
   (is (false? (s3/payload-on-s3? {:foo :bar})))
   (is (true? (s3/payload-on-s3? {:foo (s3/stepwise-offloaded-map test-path)})))
