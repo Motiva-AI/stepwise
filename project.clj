@@ -7,7 +7,7 @@
                                   [org.clojure/clojure "1.10.3"]
                                   [org.clojure/spec.alpha "0.2.194"]
                                   [pjstadig/humane-test-output "0.11.0"]
-                                  [org.slf4j/slf4j-simple "1.7.31"]
+                                  [org.slf4j/slf4j-simple "1.7.32"]
                                   [com.gfredericks/test.chuck "0.2.11"]
                                   [circleci/bond "0.5.0"]
                                   ; TODO pending jdk 9 compat https://github.com/pallet/alembic/pull/16
@@ -24,14 +24,14 @@
 
   :dependencies [[uwcpdx/bean-dip "0.7.6"]
                  [org.clojure/tools.logging "1.1.0"]
-                 [org.clojure/data.json "2.3.1"]
+                 [org.clojure/data.json "2.4.0"]
                  [org.clojure/core.async "1.3.618"]
                  [metosin/sieppari "0.0.0-alpha13"]
-                 [com.amazonaws/aws-java-sdk-iam "1.12.13"]
-                 [com.amazonaws/aws-java-sdk-sts "1.12.13"]
-                 [com.amazonaws/aws-java-sdk-stepfunctions "1.12.13"]
+                 [com.amazonaws/aws-java-sdk-iam "1.12.41"]
+                 [com.amazonaws/aws-java-sdk-sts "1.12.41"]
+                 [com.amazonaws/aws-java-sdk-stepfunctions "1.12.41"]
                  [com.cognitect.aws/api "0.8.515"]
-                 [com.cognitect.aws/endpoints "1.1.12.13"]
+                 [com.cognitect.aws/endpoints "1.1.12.37"]
                  [com.cognitect.aws/s3 "811.2.934.0"]
                  [com.taoensso/nippy "3.1.1"]])
 
