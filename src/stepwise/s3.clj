@@ -38,11 +38,27 @@
 (defn deseralize [bytes-array]
   (nippy/thaw bytes-array))
 
+(defn invoke-or-exception
+  "Calls aws/invoke, or throws an Exception if fail."
+  [s3-client request-map]
+  (let [response (aws/invoke s3-client request-map)]
+    (if (:cognitect.anomalies/category response)
+      (-> (format "Failed to %s to/from S3. Error type: %s. Error: %s"
+                  (:op request-map)
+                  (:cognitect.anomalies/category response)
+                  (or (:cognitect.anomalies/message response)
+                      (:Error response)))
+          (Exception.)
+          (throw))
+
+      ;; happy path
+      response)))
+
 (defn load-from-s3
   ([s3-client source]
    (->> (parse-s3-bucket-and-key source)
         (hash-map :op :GetObject :request)
-        (aws/invoke s3-client)
+        (invoke-or-exception s3-client)
         (:Body)
         (slurp-bytes)
         (deseralize)))
@@ -65,7 +81,7 @@
           (serialize)
           (put-object-request bucket-name object-key)
           (hash-map :op :PutObject :request)
-          (aws/invoke s3-client))
+          (invoke-or-exception s3-client))
 
      (unparse-s3-bucket-and-key {:Bucket bucket-name :Key object-key})))
 
