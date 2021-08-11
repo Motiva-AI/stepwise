@@ -76,9 +76,18 @@
   (is (= test-path (s3/ensure-single-s3-path [test-path test-path])))
   (is (thrown? java.lang.AssertionError (s3/ensure-single-s3-path [test-path test-path "some-other/path"]))))
 
-(deftest offload-select-keys-to-s3-test
+(deftest large-size?-test
+  (is (true? (s3/large-size? (repeat (int 1e6) :foo))))
+  (is (false? (s3/large-size? {:foo :bar}))))
+
+(deftest always-offload-select-keys-test
   (bond/with-stub! [[s3/offload-to-s3 (constantly test-path)]]
     (is (= {:x (s3/stepwise-offloaded-map test-path)
             :y (s3/stepwise-offloaded-map test-path)}
-           (s3/offload-select-keys {:x 1 :y 1} [:x :y] test-path)))))
+           (s3/always-offload-select-keys {:x 1 :y 1} [:x :y] test-path)))))
+
+(deftest offload-select-keys-if-large-payload-test
+  (bond/with-stub! [[s3/offload-to-s3 (constantly test-path)]]
+    (is (= {:x 1 :y 1}
+           (s3/offload-select-keys-if-large-payload {:x 1 :y 1} [:x :y] test-path)))))
 
