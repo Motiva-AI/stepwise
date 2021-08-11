@@ -234,8 +234,11 @@ To offload some of your input to S3 before execution, call
   (stepwise/start-execution!! :adder $))
 ```
 
-Stepwise workers will automatically load these offloaded data from S3 for you.
-So that your activity worker can remain unchanged.
+Note that data will only be offloaded to S3 if the payload is actually large in
+size, i.e. ~200kb.
+
+On the receiving end, Stepwise workers will automatically load these offloaded
+data from S3 for you.  So that your activity worker can remain unchanged.
 
 ```clojure
 (stepwise/start-workers! {:activity/add (fn [{:keys [x y]}] (+ x y)) })
