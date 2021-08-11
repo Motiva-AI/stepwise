@@ -120,5 +120,5 @@
   (async/>!! (:terminate-chan workers) :kill)
   (wait-all-exit!! workers))
 
-(def offload-select-keys-to-s3 s3/offload-select-keys)
+(def offload-select-keys-to-s3 s3/offload-select-keys-if-large-payload)
 
