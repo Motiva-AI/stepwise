@@ -121,6 +121,10 @@
 (defn- replace-vals [m v]
   (into {} (for [[k _] m] [k v])))
 
+(defn large-size? [coll]
+  (< 200000 ;; arbitrary value but bit below 256kb SFN message limit
+     (count (.getBytes (str coll)))))
+
 (defn replace-vals-with-offloaded-s3-path [bucket-name coll]
   (if (and (map? coll) (not-empty coll))
     (let [s3-path (offload-to-s3 bucket-name coll)]
@@ -128,8 +132,13 @@
 
     coll))
 
-(defn offload-select-keys [coll keyseq bucket-name]
+(defn always-offload-select-keys [coll keyseq bucket-name]
   (->> (select-keys coll keyseq)
        (replace-vals-with-offloaded-s3-path bucket-name)
        (merge coll)))
+
+(defn offload-select-keys-if-large-payload [coll keyseq bucket-name]
+  (if (large-size? coll)
+    (always-offload-select-keys coll keyseq bucket-name)
+    coll))
 
