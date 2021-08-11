@@ -37,7 +37,8 @@
   ((:leave (second (interceptor))) ctx))
 
 (deftest offload-select-keys-to-s3-interceptor-fn-test
-  (bond/with-stub! [[s3/offload-to-s3 offload-to-s3-mock]]
+  (bond/with-stub! [[s3/large-size? (constantly true)]
+                    [s3/offload-to-s3 offload-to-s3-mock]]
     (is (= {:response {:foo 3
                        :bar (s3/stepwise-offloaded-map test-path)}}
            (execute
@@ -46,7 +47,8 @@
                          :bar :soap}})))))
 
 (deftest offload-all-keys-to-s3-interceptor-fn-test
-  (bond/with-stub! [[s3/offload-to-s3 offload-to-s3-mock]]
+  (bond/with-stub! [[s3/large-size? (constantly true)]
+                    [s3/offload-to-s3 offload-to-s3-mock]]
     (is (= {:response {:foo (s3/stepwise-offloaded-map test-path)
                        :bar (s3/stepwise-offloaded-map test-path)}}
            (execute
