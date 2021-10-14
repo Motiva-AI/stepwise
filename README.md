@@ -161,8 +161,8 @@ JSON
 
 EDN
 ---
-{:condition [:and [>= "$.value" 20]
-                  [< "$.value" 30]]
+{:condition [:and [:>= "$.value" 20]
+                  [:< "$.value" 30]]
  :next      :value-in-twenties}
 ```
 
