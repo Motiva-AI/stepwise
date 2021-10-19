@@ -28,7 +28,7 @@
     (is (bytes? ser))
     (is (= msg (s3/deseralize ser)))))
 
-#_(deftest ^:integration invoke-or-exception-test
+(deftest ^:integration invoke-or-exception-test
   (is (thrown-with-msg?
         Exception
         #"The specified bucket does not exist"
@@ -39,8 +39,7 @@
            :request {:Bucket "NonExistBucket"
                      :Key "notfound"}}))))
 
-;; TODO setup integration envs on CI
-#_(deftest ^:integration offload-to-s3-round-trip-test
+(deftest ^:integration offload-to-s3-round-trip-test
   (let [coll {:foo 3
               :bar :soap}
         key (s3/offload-to-s3 bucket-name coll)]

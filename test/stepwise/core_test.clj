@@ -4,7 +4,7 @@
 
 (def bucket-name "stepwise-integration-test")
 
-#_(deftest ^:integration adder-state-machine-test
+(deftest ^:integration adder-state-machine-test
   (is (sw/ensure-state-machine :adder
                                {:start-at :add
                                 :states   {:add {:type     :task
