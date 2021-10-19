@@ -27,11 +27,11 @@
                  [org.clojure/data.json "2.4.0"]
                  [org.clojure/core.async "1.3.622"]
                  [metosin/sieppari "0.0.0-alpha13"]
-                 [com.amazonaws/aws-java-sdk-iam "1.12.76"]
-                 [com.amazonaws/aws-java-sdk-sts "1.12.76"]
-                 [com.amazonaws/aws-java-sdk-stepfunctions "1.12.76"]
+                 [com.amazonaws/aws-java-sdk-iam "1.12.90"]
+                 [com.amazonaws/aws-java-sdk-sts "1.12.90"]
+                 [com.amazonaws/aws-java-sdk-stepfunctions "1.12.90"]
                  [com.cognitect.aws/api "0.8.524"]
-                 [com.cognitect.aws/endpoints "1.1.12.69"]
+                 [com.cognitect.aws/endpoints "1.1.12.88"]
                  [com.cognitect.aws/s3 "814.2.991.0"]
                  [com.taoensso/nippy "3.1.1"]])
 
