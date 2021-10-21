@@ -283,7 +283,7 @@
               (remove (fn [path]
                         (let [last-node (last path)]
                           (or (instance? Long last-node)
-                              (= (namespace last-node) "stepwise.model"))))))
+                              (and (keyword? last-node) (= (namespace last-node) "stepwise.model")))))))
         (tree-seq (fn [[_ value]]
                     (coll? value))
                   (fn [[path value]]
