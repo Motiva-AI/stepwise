@@ -5,9 +5,14 @@
 
 (s/def ::json-path (s/and string? not-empty))
 (s/def ::mdl/reference-path ::json-path)
+
+;; https://docs.aws.amazon.com/step-functions/latest/dg/concepts-input-output-filtering.html
 (s/def ::mdl/input-path ::json-path)
-(s/def ::mdl/output-path ::json-path)
+(s/def ::mdl/parameters ::json-path)
+(s/def ::mdl/result-selector ::json-path)
 (s/def ::mdl/result-path ::json-path)
+(s/def ::mdl/output-path ::json-path)
+
 (s/def ::mdl/seconds-path ::json-path)
 (s/def ::mdl/timestamp-path ::json-path)
 

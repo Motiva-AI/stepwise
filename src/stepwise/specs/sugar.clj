@@ -128,8 +128,10 @@
 (s/def ::sgr/parallel
   (s/merge (type= ::mdl/parallel)
            (s/keys :req-un [::sgr/branches]
-                   :opt-un [::sgr/catch ::sgr/retry ::mdl/comment ::mdl/input-path
-                            ::mdl/output-path ::mdl/result-path])
+                   :opt-un [::mdl/comment
+                            ::mdl/input-path ::mdl/output-path
+                            ::mdl/parameters ::mdl/result-path ::mdl/result-selector
+                            ::sgr/catch ::sgr/retry])
            (s/get-spec ::sgr/transition)))
 
 (s/def ::sgr/result
@@ -138,16 +140,18 @@
 
 (s/def ::sgr/pass
   (s/merge (type= ::mdl/pass)
-           (s/keys :opt-un [::mdl/comment ::mdl/input-path ::mdl/output-path ::sgr/result
-                            ::mdl/result-path])
+           (s/keys :opt-un [::mdl/comment
+                            ::mdl/input-path ::mdl/output-path
+                            ::mdl/parameters ::mdl/result-path ::sgr/result])
            (s/get-spec ::sgr/transition)))
 
 (s/def ::sgr/task
   (s/merge (type= ::mdl/task)
            (s/keys :req-un [::mdl/resource]
-                   :opt-un [::sgr/catch ::sgr/retry ::mdl/comment ::mdl/heartbeat-seconds
-                            ::mdl/input-path ::mdl/output-path ::mdl/result-path
-                            ::mdl/timeout-seconds])
+                   :opt-un [::mdl/comment ::mdl/input-path ::mdl/output-path
+                            ::sgr/catch ::sgr/retry
+                            ::mdl/parameters ::mdl/result-selector ::mdl/result-path
+                            ::mdl/timeout-seconds ::mdl/heartbeat-seconds])
            (s/get-spec ::sgr/transition)))
 
 (s/def ::sgr/wait-for

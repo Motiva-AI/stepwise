@@ -243,8 +243,10 @@
 (def pass-through-model-keys
   #{::mdl/comment
     ::mdl/input-path
-    ::mdl/output-path
+    ::mdl/parameters
+    ::mdl/result-selector
     ::mdl/result-path
+    ::mdl/output-path
     ::mdl/backoff-rate
     ::mdl/interval-seconds
     ::mdl/max-attempts

@@ -314,8 +314,11 @@
   (.transition builder (map->Transition transition)))
 
 (def-builder-translation PassState
-                         #{::comment [::input-path String] [::output-path String] [::result String]
-                           [::result-path String] ::transition})
+                         #{::comment
+                           [::input-path String] [::parameters String]
+                           [::result-path String] [::output-path String]
+                           [::result String]
+                            ::transition})
 
 (def-builder-translation SucceedState
                          #{::comment [::input-path String] [::output-path String] ::terminal-state?}
@@ -339,9 +342,10 @@
   (int heartbeat-seconds))
 
 (def-builder-translation TaskState
-                         #{::catchers ::comment ::heartbeat-seconds [::input-path String]
-                           [::output-path String] [::result-path String] ::resource ::retriers
-                           ::timeout-seconds ::transition})
+                         #{::catchers ::comment ::heartbeat-seconds
+                           [::input-path String] [::parameters String]
+                           [::result-selector String][::result-path String] [::output-path String]
+                           ::resource ::retriers ::timeout-seconds ::transition})
 
 (defmethod bd/builder-override [WaitState ::transition] [_ ^WaitState$Builder builder transition]
   (.transition builder (map->Transition transition)))
@@ -380,8 +384,10 @@
   (.transition builder (map->Transition transition)))
 
 (def-builder-translation ParallelState
-                         #{::branches ::catchers ::comment [::input-path String]
-                           [::output-path String] [::result-path String] ::retriers ::transition})
+                         #{::branches ::catchers ::comment
+                           [::input-path String] [::parameters String]
+                           [::result-selector String] [::result-path String] [::output-path String]
+                           ::retriers ::transition})
 
 (def state-kw->map->Bean
   {::choice   map->ChoiceState$Builder
