@@ -34,6 +34,7 @@
                                       :states   {:add {:type     :task
                                                        :resource :stepwise-integration-test/add
                                                        :comment  "unit test task"
+                                                       ;; TODO clean up API so that we can pass in a map directly
                                                        :parameters (json/write-str {:comment "replaced comment"
                                                                                     "MyInput" {"newX.$" "$.x"
                                                                                                "newY.$" "$.y"}})
