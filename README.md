@@ -22,7 +22,14 @@ Implemented Features:
    reloading](http://thinkrelevance.com/blog/2013/06/04/clojure-workflow-reloaded)
  * [Offloading](#offloading-large-payload-to-s3) large payloads to S3
 
-Our production workflow orchestration is implemented using this library.
+Stepwise is in production at:
+
+- UW Medicine Center For Precision Diagnostics orchestrate their ETL with Stepwise
+- Motiva's production workflow serving a handful of Fortune 500 companies is mostly built upon this library
+
+Further reading:
+
+- [Orchestrating Pizza-Making: A Tutorial for AWS Step Functions with Stepwise](https://www.quantisan.com/orchestrating-pizza-making-a-tutorial-for-aws-step-functions-with-stepwise/)
 
 ## Basic Usage
 
