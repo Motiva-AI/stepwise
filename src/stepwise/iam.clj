@@ -19,9 +19,25 @@
 
 (def execution-policy
   {"Version"   "2012-10-17"
-   "Statement" [{"Effect"   "Allow"
+   "Statement" [; Permission to call Lambda functions
+                {"Effect"   "Allow"
                  "Action"   ["lambda:InvokeFunction"]
-                 "Resource" "*"}]})
+                 "Resource" "*"}
+
+                ; Permission to call another nested workflow execution
+                ; Reference https://docs.aws.amazon.com/step-functions/latest/dg/stepfunctions-iam.html
+                {"Effect"   "Allow"
+                 "Action"   ["states:StartExecution"]
+                 "Resource" "arn:aws:states:*:*"}
+                {"Effect"   "Allow"
+                 "Action"   ["states:DescribeExecution"
+                             "states:StopExecution"]
+                 "Resource" "*"}
+                {"Effect"   "Allow"
+                 "Action"   ["events:PutTargets"
+                             "events:PutRule"
+                             "events:DescribeRule"]
+                 "Resource" "arn:aws:events:us-west-2:*:rule/StepFunctionsGetEventsForStepFunctionsExecutionRule"}]})
 
 (set! *warn-on-reflection* true)
 
