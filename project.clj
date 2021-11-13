@@ -25,13 +25,13 @@
   :dependencies [[uwcpdx/bean-dip "0.7.6"]
                  [org.clojure/tools.logging "1.1.0"]
                  [org.clojure/data.json "2.4.0"]
-                 [org.clojure/core.async "1.3.622"]
+                 [org.clojure/core.async "1.4.627"]
                  [metosin/sieppari "0.0.0-alpha13"]
-                 [com.amazonaws/aws-java-sdk-iam "1.12.97"]
-                 [com.amazonaws/aws-java-sdk-sts "1.12.97"]
-                 [com.amazonaws/aws-java-sdk-stepfunctions "1.12.97"]
+                 [com.amazonaws/aws-java-sdk-iam "1.12.110"]
+                 [com.amazonaws/aws-java-sdk-sts "1.12.110"]
+                 [com.amazonaws/aws-java-sdk-stepfunctions "1.12.110"]
                  [com.cognitect.aws/api "0.8.524"]
-                 [com.cognitect.aws/endpoints "1.1.12.93"]
+                 [com.cognitect.aws/endpoints "1.1.12.105"]
                  [com.cognitect.aws/s3 "814.2.991.0"]
                  [com.taoensso/nippy "3.1.1"]])
 
