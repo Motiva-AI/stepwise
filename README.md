@@ -2,10 +2,11 @@
 
 [![Clojars Project](https://img.shields.io/clojars/v/ai.motiva/stepwise.svg)](https://clojars.org/ai.motiva/stepwise)
 
-Stepwise is an idiomatic Clojure library for [AWS Step
-Functions](https://aws.amazon.com/step-functions/). Use it to coordinate
-asynchronous, distributed processes with AWS managing state, branching, and
-retries.
+Stepwise inverts the responsibility [1] of [AWS Step
+Functions](https://aws.amazon.com/step-functions/) such that you control
+your workflow orchestration with a Stepwise DSL from inside Clojure. Use
+Stepwise to coordinate asynchronous, distributed processes with AWS managing
+state, branching, and retries.
 
 This Motiva-AI library is a fork of
 [uwcpdx/stepwise](https://github.com/uwcpdx/stepwise) and contains [breaking
@@ -29,7 +30,8 @@ Stepwise is in production at:
 
 Further reading:
 
-- [Orchestrating Pizza-Making: A Tutorial for AWS Step Functions with Stepwise](https://www.quantisan.com/orchestrating-pizza-making-a-tutorial-for-aws-step-functions-with-stepwise/)
+1. [You Can't Buy Integration](https://martinfowler.com/articles/cant-buy-integration.html#UseCommercialIntegrationToolsToSimplifyImplementationConcerns)
+2. [Orchestrating Pizza-Making: A Tutorial for AWS Step Functions with Stepwise](https://www.quantisan.com/orchestrating-pizza-making-a-tutorial-for-aws-step-functions-with-stepwise/)
 
 ## Basic Usage
 
