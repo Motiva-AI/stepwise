@@ -3,7 +3,6 @@
             [clojure.set :as sets]
             [clojure.string :as strs]
             [clojure.walk :as walk]
-            [stepwise.serialization :as json]
             [stepwise.serialization :as ser])
   (:import (java.util Date)
            (clojure.lang MapEntry Seqable)))
@@ -179,10 +178,10 @@
   (ser/deser-keyword-name start-at))
 
 (defmethod desugar* ::result [_ result]
-  (json/ser-io-doc result))
+  (ser/ser-io-doc result))
 
 (defmethod sugar* ::mdl/result [_ result]
-  (json/deser-io-doc result))
+  (ser/deser-io-doc result))
 
 (defmethod desugar* ::retry [_ retriers]
   {::key ::mdl/retriers
@@ -199,6 +198,12 @@
 (defmethod sugar* ::mdl/catchers [_ catchers]
   {::key :catch
    ::val catchers})
+
+(defmethod sugar* ::mdl/parameters [_ parameters]
+  (ser/deser-io-doc parameters))
+
+(defmethod desugar* ::parameters [_ parameters]
+  (ser/ser-io-doc parameters))
 
 (defn renamespace-keys [match-key? target-ns]
   (fn [node]
@@ -243,7 +248,6 @@
 (def pass-through-model-keys
   #{::mdl/comment
     ::mdl/input-path
-    ::mdl/parameters
     ::mdl/result-selector
     ::mdl/result-path
     ::mdl/output-path
@@ -318,4 +322,3 @@
     (walk/prewalk (comp (translate-keys sugar* nil)
                         (renamespace-keys pass-through-model-keys nil))
                   state-machine)))
-

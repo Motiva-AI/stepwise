@@ -14,10 +14,9 @@
                                       :states   {:add {:type     :task
                                                        :resource :stepwise-integration-test/add
                                                        :comment  "unit test task"
-                                                       ;; TODO clean up API so that we can pass in a map directly
-                                                       :parameters (json/write-str {:comment "replaced comment"
-                                                                                    "MyInput" {"newX.$" "$.x"
-                                                                                               "newY.$" "$.y"}})
+                                                       :parameters {:comment "replaced comment"
+                                                                    "MyInput" {"newX.$" "$.x"
+                                                                               "newY.$" "$.y"}}
                                                        :result-selector (json/write-str {"newZ.$" "$.z"})
                                                        :result-path "$.add-output"
                                                        :heartbeat-seconds 3
@@ -52,4 +51,3 @@
   (delete-state-machine state-machine-keyword-name))
 
 (use-fixtures :once state-machine-fixture)
-
