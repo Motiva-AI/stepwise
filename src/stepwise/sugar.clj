@@ -205,6 +205,12 @@
 (defmethod desugar* ::parameters [_ parameters]
   (ser/ser-io-doc parameters))
 
+(defmethod sugar* ::mdl/result-selector [_ result-selector]
+  (ser/deser-io-doc result-selector))
+
+(defmethod desugar* ::result-selector [_ result-selector]
+  (ser/ser-io-doc result-selector))
+
 (defn renamespace-keys [match-key? target-ns]
   (fn [node]
     (if (and (instance? MapEntry node)
@@ -248,7 +254,6 @@
 (def pass-through-model-keys
   #{::mdl/comment
     ::mdl/input-path
-    ::mdl/result-selector
     ::mdl/result-path
     ::mdl/output-path
     ::mdl/backoff-rate
