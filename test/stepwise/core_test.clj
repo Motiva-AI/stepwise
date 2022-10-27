@@ -17,7 +17,7 @@
                                                        :parameters {:comment "replaced comment"
                                                                     "MyInput" {"newX.$" "$.x"
                                                                                "newY.$" "$.y"}}
-                                                       :result-selector (json/write-str {"newZ.$" "$.z"})
+                                                       :result-selector {"newZ.$" "$.z"}
                                                        :result-path "$.add-output"
                                                        :heartbeat-seconds 3
                                                        :end      true}}}))
