@@ -1,4 +1,4 @@
-(defproject ai.motiva/stepwise "0.8.0"
+(defproject ai.motiva/stepwise "0.9.0-SNAPSHOT"
   :description "Clojure AWS Step Functions library"
   :url "https://github.com/Motiva-AI/stepwise"
   :license {:name "Eclipse Public License"
