@@ -77,6 +77,7 @@
                                                                 SucceedState$Builder)
            (com.amazonaws.services.stepfunctions.builder.conditions AndCondition
                                                                     BooleanEqualsCondition
+                                                                    IsPresentCondition
                                                                     NotCondition
                                                                     NumericEqualsCondition
                                                                     NumericGreaterThanCondition
@@ -236,6 +237,7 @@
   {::and         map->AndCondition$Builder
    ::or          map->OrCondition$Builder
    ::not         map->NotCondition$Builder
+   ::present?    map->IsPresentCondition$Builder
    ::bool-eq     map->BooleanEqualsCondition$Builder
    ::numeric-eq  map->NumericEqualsCondition$Builder
    ::numeric-gt  map->NumericGreaterThanCondition$Builder
@@ -264,6 +266,7 @@
    OrCondition                          ::or
    NotCondition                         ::not
    BooleanEqualsCondition               ::bool-eq
+   IsPresentCondition                   ::present?
    NumericEqualsCondition               ::numeric-eq
    NumericGreaterThanCondition          ::numeric-gt
    NumericGreaterThanOrEqualCondition   ::numeric-gte
@@ -318,7 +321,7 @@
                            [::input-path String] [::parameters String]
                            [::result-path String] [::output-path String]
                            [::result String]
-                            ::transition})
+                           ::transition})
 
 (def-builder-translation SucceedState
                          #{::comment [::input-path String] [::output-path String] ::terminal-state?}
