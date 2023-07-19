@@ -122,7 +122,7 @@
   (into {} (for [[k _] m] [k v])))
 
 (defn large-size? [coll]
-  (< 200000 ;; arbitrary value but bit below 256kb SFN message limit
+  (< 100000 ;; arbitrary value but well below 256kb SFN message limit
      (count (.getBytes (str coll)))))
 
 (defn replace-vals-with-offloaded-s3-path [bucket-name coll]
