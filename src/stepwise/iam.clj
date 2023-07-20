@@ -14,7 +14,7 @@
 (def assume-role-policy
   {"Version"   "2012-10-17",
    "Statement" [{"Effect"    "Allow",
-                 "Principal" {"Service" "states.us-west-2.amazonaws.com"},
+                 "Principal" {"Service" "states.amazonaws.com"},
                  "Action"    "sts:AssumeRole"}]})
 
 (def execution-policy
